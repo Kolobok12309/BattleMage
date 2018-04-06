@@ -1,0 +1,19 @@
+.row {
+	margin: 0;
+	padding: 0;
+	height: 10px;
+}
+.col {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	margin: 0;
+	display: inline-block;
+	background-color: lightgray;
+}
+.col:hover {
+	background-color: darkgray;
+}
+#test {
+	background-color: lightgray;
+}

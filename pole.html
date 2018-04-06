@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Битва магов</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="sys/css/style.css">
+	<link rel="stylesheet" href="sys/css/normalize.css">
+	<link rel="stylesheet" href="sys/css/skeleton.css">
+</head>
+<body>
+	<div id='pole'></div>
+	<script type="text/javascript" src='sys/js/main.js'></script>
+	<br>
+	<button class='button-primary' onclick='randBlockMark()'>Закрасить рандомный блок</button>
+	<button onclick='blockk = new unitMaker("m",1,1);getId("hid").style.display="block";'>Создать блок</button>
+	<button onclick='blockk = new unitMaker("w",1,1);getId("hid").style.display="block";'>Создать стену</button>
+	<button onclick='genWalls()'>Создать границы</button>
+	<div id='hid' style='display: none'>
+		<button onclick='blockk.move("n")'>/\</button>
+		<button onclick='blockk.move("s")'>\/</button>
+		<button onclick='blockk.move("w")'><-</button>
+		<button onclick='blockk.move("o")'>-></button>
+		<button onclick='blockk.remove()'>DELETE</button>
+	</div>
+</body>
+</html>
