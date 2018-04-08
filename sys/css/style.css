@@ -3,7 +3,7 @@
 	padding: 0;
 	height: 10px;
 }
-.col {
+.unit {
 	position: absolute;
 	width: 10px;
 	height: 10px;
@@ -16,4 +16,10 @@
 }
 #test {
 	background-color: lightgray;
+}
+.mainTarget {
+	margin: -1.5px;
+	border:solid;
+	border-color: black;
+	border-width: 1.5px;
 }
