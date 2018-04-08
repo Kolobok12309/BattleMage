@@ -34,8 +34,15 @@
 			<button onclick='vm.nowMainSelect.move({x:1,y:-1})'>_\</button>
 		</div>
 		<br>
+		<div id='cast'>
+			<select v-model='spellId'>
+				<option v-for="spell in spells" :value='spell.id'>{{spell.name}}</option>
+			</select>
+			<input  v-on:keyup.enter='nowMainSelect.cast(spellId)' v-show='spells[spellId]&&spells[spellId].input' id='spellInput' placeholder="Особые параметры заклинания">
+			<button class='button-primary' v-on:click='nowMainSelect.cast(spellId)'>CAST</button>
+		</div>
+		<br>
 		<button onclick='vm.nowMainSelect.remove()'>DELETE</button>
-		<button v-if='nowMainSelect' v-on:click='castV'>V</button>
 		<div v-if='nowMainSelect'>
 			<input v-model='update' type="hidden">
 			<healthbar :width='"100px"' :height='"30px"' :hp='nowMainSelect.stats.hp' :hp-max='nowMainSelect.stats.hpMax'></healthbar>

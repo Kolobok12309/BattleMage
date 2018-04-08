@@ -252,11 +252,21 @@ function Wall(x,y) {
 	elems.walls.push(this);
 }
 
-function Spell(name,target,callback) {
+function Spell(name,targets,manacost,callback,input=false) {
 	this.id=lastSpellId++;
 	this.name=name;
-	this.target=target;
-	this.cast=callback;
+	this.targets=targets;
+	this.manacost=manacost;
+	this.input=input;
+	this.cast=function(me, target) {
+		if(me.stats.mp>manacost) {
+			console.log(this.manacost);
+			if(this.input) inputs=getId('spellInput').value;
+			callback.call(this, me, target, inputs);
+			me.addMp(-manacost);
+		}
+		else console.log('Недостаточно маны');
+	}
 	elems.spells.push(this);
 }
 
@@ -286,17 +296,17 @@ var nowSemiTarget;
 
 //тестовое заклинание
 
-const teleport = new Spell('Teleport','all',(me,target)=>{
-	me.setCoords(target);
+const teleport = new Spell('Teleport','all',40,(me,target,inputs)=>{
+	inputs=inputs.split(' ');
+	me.setCoords({x:inputs[0],y:inputs[1]});
 	console.log('magic');
 	nowSemiTarget=null;
-});
+},true);
 
-const vampire = new Spell('LifeSteal','all',(me,target=nowSemiTarget)=>{
+const vampire = new Spell('LifeSteal','all',30,function(me,target=nowSemiTarget) {
 	target.addHp(-30);
 	me.addHp(30);
-	console.log('vampire');
-	nowSemiTarget=null;
+	//nowSemiTarget=null;
 });
 
 //Действия
@@ -310,8 +320,10 @@ const vm = new Vue({
 	el: '#hid',
 	data: {
 		nowMainSelect: null,//выбранный в данный момент юнит
+		spells: elems.spells,
 		step: 0,
 		update: false,//костыль
+		spellId: '',
 	},
 	methods: {
 		castV: function() {
