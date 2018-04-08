@@ -204,10 +204,12 @@ function Mage(team='default',name='default',x,y) {
 	this.addHp = function(hp) {
 		if(this.live) {
 			Vue.set(this.stats,'hp',this.stats.hp+hp);
+			updateVue();
 			//this.stats.hp+=hp;
 			if(this.stats.hp>this.stats.hpMax) this.stats.hp=this.stats.hpMax;
 			if(this.stats.hp<=this.stats.hpMin) {
 				Vue.set(this.stats,'hp',0);
+				updateVue();
 				//this.hp=0;
 				this.live=false;
 				this.canMove=false;
@@ -222,8 +224,13 @@ function Mage(team='default',name='default',x,y) {
 	this.addMp = function(mp) {
 		if(this.live) {
 			//this.stats.mp+=mp;
-			vm.$set(vm.nowMainSelect.stats,'mp',this.stats.mp+mp);
+			Vue.set(this.stats,'mp',this.stats.mp+mp);
+			updateVue();
 			if(this.stats.mp>this.stats.mpMax) this.stats.mp=this.stats.mpMax;
+			if(this.stats.mp<=0) {
+				updateVue();
+				Vue.set(this.stats,'mp',0);
+			}
 		} else {
 			console.log('Цель мертва');
 		}
@@ -302,36 +309,59 @@ renderPole(80,40);
 const vm = new Vue({
 	el: '#hid',
 	data: {
-		nowMainSelect: undefined,//выбранный в данный момент юнит
+		nowMainSelect: null,//выбранный в данный момент юнит
 		step: 0,
-		test: '',
+		update: false,//костыль
 	},
 	methods: {
-		
+		castV: function() {
+			this.nowMainSelect.cast(1);
+		},
 	},
 	computed: {
 
 	},
 });
 
+function updateVue() {
+	Vue.set(vm,'update',!vm.update);//Лютый костыль
+}
 
 Vue.component('manabar', {
-	props: ['stats','width','height'],
+	props: ['mp','mpMax','width','height'],
 
 	template: `<div :style=style1>
-					<span :style=style3>{{stats}}</span>
+					<span :style=style3>{{mp}}</span>
 					<div :style=style2>
 					</div>
 				</div>`,
 	computed: {
-		cwidth: function() {
-			return (this.stats)?this.stats/100*100+"%":"33.5%";
-		},
 		style1: function() {
 			return `background-color:lightblue;text-align:center;width:${this.width};height:${this.height};line-height:${this.height};`;
 		},
 		style2: function() {
-			return `background-color:blue;width:${this.cwidth};height:${this.height}`;
+			return `background-color:blue;width:${(this.mp!=undefined)?this.mp/this.mpMax*100+"%":"100%"};height:${this.height}`;
+		},
+		style3: function() {
+			return `position:absolute;width:${this.width};left:0;`
+		}
+	}
+});
+
+Vue.component('healthbar', {
+	props: ['hp','hpMax','width','height'],
+
+	template: `<div :style=style1>
+					<span :style=style3>{{hp}}</span>
+					<div :style=style2>
+					</div>
+				</div>`,
+	computed: {
+		style1: function() {
+			return `background-color:lightgreen;text-align:center;width:${this.width};height:${this.height};line-height:${this.height};`;
+		},
+		style2: function() {
+			return `background-color:green;width:${(this.hp!=undefined)?this.hp/this.hpMax*100+"%":"100%"};height:${this.height}`;
 		},
 		style3: function() {
 			return `position:absolute;width:${this.width};left:0;`

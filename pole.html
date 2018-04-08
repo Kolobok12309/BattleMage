@@ -35,10 +35,11 @@
 		</div>
 		<br>
 		<button onclick='vm.nowMainSelect.remove()'>DELETE</button>
+		<button v-if='nowMainSelect' v-on:click='castV'>V</button>
 		<div v-if='nowMainSelect'>
-			<input v-model='test'>
-			<!-- <healthbar :color1='"lightgreen"' :color2='"green"' :width='"100px"' :height='"30px"' :obj='nowMainSelect' :type='"hp"'></healthbar> -->
-			<manabar :width='"100px"' :height='"30px"' :stats='nowMainSelect.stats.mp'></manabar>
+			<input v-model='update' type="hidden">
+			<healthbar :width='"100px"' :height='"30px"' :hp='nowMainSelect.stats.hp' :hp-max='nowMainSelect.stats.hpMax'></healthbar>
+			<manabar :width='"100px"' :height='"30px"' :mp='nowMainSelect.stats.mp' :mp-max='nowMainSelect.stats.mpMax'></manabar>
 		</div>
 		<span>Текущий ход: {{step}}</span>
 	</div>
