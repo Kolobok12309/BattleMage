@@ -49,7 +49,7 @@ function move({x:x=0,y:y=0}) {
 		if (x<-1) x=-1;
 		if (y<-1) y=-1;
 		const coords = this.getCoords();
-		if((x==0&&y==0)||this.setCoords({x:coords.x+x,y:coords.y+y})) {
+		if((x==0&&y==0)||this.setCoords({x:coords.x+x-0,y:coords.y+y-0})) {
 			this.steps++;
 			checkStep();
 		} else console.log('занято');
@@ -171,8 +171,8 @@ function unitMaker(x,y) {
 		if(checkBlock({x:xx,y:yy})) {
 			this.obj.style.left=`${xx*10}px`;
 			this.obj.style.top=`${(maxY-yy-1)*10}px`;
-			x=xx;
-			y=yy;
+			x= xx-0;
+			y= yy-0;
 			return true;
 		} else return false;
 	}
@@ -258,7 +258,7 @@ function Spell(name,targets,manacost,callback,input=false) {
 	this.targets=targets;
 	this.manacost=manacost;
 	this.input=input;
-	this.cast=function(me, target) {
+	this.cast=function(me, target=nowSemiTarget) {
 		if(me.stats.mp>manacost) {
 			console.log(this.manacost);
 			if(this.input) inputs=getId('spellInput').value;
@@ -300,10 +300,10 @@ const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
 	inputs=inputs.split(' ');
 	me.setCoords({x:inputs[0],y:inputs[1]});
 	console.log('magic');
-	nowSemiTarget=null;
+	//nowSemiTarget=null;
 },true);
 
-const vampire = new Spell('LifeSteal','all',30,function(me,target=nowSemiTarget) {
+const vampire = new Spell('LifeSteal','all',30,function(me,target) {
 	target.addHp(-30);
 	me.addHp(30);
 	//nowSemiTarget=null;
@@ -326,9 +326,7 @@ const vm = new Vue({
 		spellId: '',
 	},
 	methods: {
-		castV: function() {
-			this.nowMainSelect.cast(1);
-		},
+
 	},
 	computed: {
 
