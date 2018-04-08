@@ -27,6 +27,9 @@ function renderPole(x,y) {
 	maxY=y;
 	return true;
 }
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 function genWalls() {
 	for(var i = 0;i<maxX;i++) {
 		new unitMaker('w',i,0);
@@ -75,15 +78,12 @@ function unitMaker(x,y) {
 	this.canMove=true;
 	const block = document.createElement('div');
 	block.className='unit';
-	block.style.top=`${y*10}px`;
-	block.style.left=`${x*10}px`;
 	block.gameBlock=this;
 	block.addEventListener('dblclick',()=>{
 		self.selectThis();
 	});
 	getId('test').appendChild(block);
 	this.obj=block;
-
 	this.selectThis = function(bb) {
 		if(vm.nowMainSelect) removeClass(vm.nowMainSelect.obj,'mainTarget');
 		vm.nowMainSelect=this;
@@ -109,12 +109,13 @@ function unitMaker(x,y) {
 	this.setCoords = function({x:xx,y:yy}) {
 		if(checkBlock({x:xx,y:yy})) {
 			this.obj.style.left=`${xx*10}px`;
-			this.obj.style.top=`${yy*10}px`;
+			this.obj.style.top=`${(maxY-yy-1)*10}px`;
 			x=xx;
 			y=yy;
 		} else console.log('занято');
 	}
 
+	this.setCoords({x:x,y:y});
 	this.selectThis();
 }
 
@@ -155,7 +156,11 @@ function Mage(team='default',name='default',x,y) {
 		}
 	}
 
-	this.cast = function(id,targets) {
+	this.preCast = function(id) {//при выборе заклинания выбираются кол-во целей итд
+
+	}
+
+	this.cast = function(id,targets) {//сам каст
 		magic[id](this,targets);
 	}
 
@@ -172,7 +177,7 @@ var maxX;
 var maxY;
 var elems = {
 	units: [],//существа
-	magic: [],//всевозсожные заклинания
+	magic: [],//всевозможные заклинания
 	walls: [],//стены
 	activeMagic: [],//пущеные чары
 	buffs: [],//баффы
@@ -232,4 +237,21 @@ Vue.component('bar', {
 			return `position:absolute;width:${this.width};left:0;`
 		}
 	}
-})
+});
+
+
+//Дзадания
+
+
+async function m(N) {//отступ между границами
+	var dirs = [{x:-1},{y:-1},{x:1},{y:1}];
+	var m = 1;
+	for(var i = 0;i<2*N-1;i++) {
+		for(var j = 0;j<N-m;j++) {
+			vm.nowMainSelect.move(dirs[i%4]);
+			console.log(dirs[i%4]);
+			await sleep(500);
+		}
+		if(i%4==2||(i%2==0&&i!=0)) m++;
+	}
+}

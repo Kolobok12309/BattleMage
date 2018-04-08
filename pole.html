@@ -11,14 +11,14 @@
 <body>
 	<div id='pole'></div>
 	<br>
-	<button class='button-primary' onclick='vm.nowMainSelect = new Mage("team","name",1,1);getId("hid").style.display="block";'>Создать блок</button>
-	<button onclick='vm.nowMainSelect = new Wall(1,1);getId("hid").style.display="block";'>Создать стену</button>
+	<button class='button-primary' onclick='vm.nowMainSelect = new Mage("team","name",maxX-1,maxY-1);getId("hid").style.display="block";'>Создать блок</button>
+	<button onclick='vm.nowMainSelect = new Wall(maxX-1,maxY);getId("hid").style.display="block";'>Создать стену</button>
 	<button onclick='genWalls()'>Создать границы</button>
 	<div id='hid' style='display: none'>
 		<div class='row'>
-			<button onclick='vm.nowMainSelect.move({x:-1,y:-1})'>\</button>
-			<button onclick='vm.nowMainSelect.move({y:-1})'>/\</button>
-			<button onclick='vm.nowMainSelect.move({x:1,y:-1})'>/-</button>
+			<button onclick='vm.nowMainSelect.move({x:-1,y:1})'>\</button>
+			<button onclick='vm.nowMainSelect.move({y:1})'>/\</button>
+			<button onclick='vm.nowMainSelect.move({x:1,y:1})'>/-</button>
 		</div>
 		<br>
 		<div class='row'>
@@ -28,9 +28,9 @@
 		</div>
 		<br>
 		<div class='row'>
-			<button onclick='vm.nowMainSelect.move({x:-1,y:1})'>/_</button>
-			<button onclick='vm.nowMainSelect.move({y:1})'>\/</button>
-			<button onclick='vm.nowMainSelect.move({x:1,y:1})'>_\</button>
+			<button onclick='vm.nowMainSelect.move({x:-1,y:-1})'>/_</button>
+			<button onclick='vm.nowMainSelect.move({y:-1})'>\/</button>
+			<button onclick='vm.nowMainSelect.move({x:1,y:-1})'>_\</button>
 		</div>
 		<br>
 		<button onclick='vm.nowMainSelect.remove()'>DELETE</button>
