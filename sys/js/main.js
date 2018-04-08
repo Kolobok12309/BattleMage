@@ -88,8 +88,6 @@ function checkStep() {
 	}
 }
 function nextPlayer() {
-	console.log('beg');
-	console.log('lvl0');
 	var state = true;
 	var f;
 	for(var i = 0;i<elems.units.gamers.length;i++) {
@@ -125,11 +123,23 @@ function unitMaker(x,y) {
 	block.addEventListener('dblclick',()=>{
 		self.selectThis();
 	});
+
+	block.addEventListener('click',()=>{
+		if(self.id!=vm.nowMainSelect.id) self.semiSelectThis();
+	});
+
 	getId('test').appendChild(block);
 	this.obj=block;
+
+	this.semiSelectThis = function(bb) {
+		if(nowSemiTarget) removeClass(nowSemiTarget.obj,'semiTarget');
+		nowSemiTarget=this;
+		addClass(this.obj,'semiTarget');
+	}
+
 	this.selectThis = function(bb) {
 		if(vm.nowMainSelect) removeClass(vm.nowMainSelect.obj,'mainTarget');
-		vm.nowMainSelect=this;
+		Vue.set(vm,'nowMainSelect',this);
 		addClass(this.obj,'mainTarget');
 		if(this.role=='Mage') nowPlayerIndex=elems.units.gamers.indexOf(this);
 	}
@@ -178,12 +188,14 @@ function Mage(team='default',name='default',x,y) {
 	this.obj.style.backgroundColor='red';
 	this.name=name;
 	this.steps=0;
+	this.stats = {
+		hp: 100,
+		hpMax: 100,
+		hpMin: 0,
+		mp: 100,
+		mpMax: 100,
+	}
 	this.maxSteps=1;
-	this.hpMax=100;
-	this.mpMax=100;
-	this.hpMin=0;
-	this.hp=100;
-	this.mp=100;
 	this.live=true;
 	this.magic=elems.magic;
 	nowPlayerIndex=elems.units.gamers.length;
@@ -191,10 +203,12 @@ function Mage(team='default',name='default',x,y) {
 
 	this.addHp = function(hp) {
 		if(this.live) {
-			this.hp+=hp;
-			if(this.hp>this.hpMax) this.hp=this.hpMax;
-			if(this.hp<=this.hpMin) {
-				this.hp=0;
+			Vue.set(this.stats,'hp',this.stats.hp+hp);
+			//this.stats.hp+=hp;
+			if(this.stats.hp>this.stats.hpMax) this.stats.hp=this.stats.hpMax;
+			if(this.stats.hp<=this.stats.hpMin) {
+				Vue.set(this.stats,'hp',0);
+				//this.hp=0;
 				this.live=false;
 				this.canMove=false;
 			}
@@ -207,8 +221,9 @@ function Mage(team='default',name='default',x,y) {
 
 	this.addMp = function(mp) {
 		if(this.live) {
-			this.mp+=mp;
-			if(this.mp>this.mpMax) this.mp=this.mpMax;
+			//this.stats.mp+=mp;
+			vm.$set(vm.nowMainSelect.stats,'mp',this.stats.mp+mp);
+			if(this.stats.mp>this.stats.mpMax) this.stats.mp=this.stats.mpMax;
 		} else {
 			console.log('Цель мертва');
 		}
@@ -218,8 +233,8 @@ function Mage(team='default',name='default',x,y) {
 
 	}
 
-	this.cast = function(id,targets) {//сам каст
-		magic[id](this,targets);
+	this.cast = function(id,target) {//сам каст
+		elems.spells[id].cast(this,target);
 	}
 
 }
@@ -229,6 +244,15 @@ function Wall(x,y) {
 	this.obj.style.backgroundColor='black';
 	elems.walls.push(this);
 }
+
+function Spell(name,target,callback) {
+	this.id=lastSpellId++;
+	this.name=name;
+	this.target=target;
+	this.cast=callback;
+	elems.spells.push(this);
+}
+
 //Свойства
 
 var maxX;
@@ -238,7 +262,7 @@ var elems = {
 		gamers: [],
 		others: [],
 	},//существа
-	magic: [],//всевозможные заклинания
+	spells: [],//всевозможные заклинания
 	walls: [],//стены
 	activeMagic: [],//пущеные чары
 	buffs: [],//баффы
@@ -248,9 +272,25 @@ var elems = {
 
 };//массив всех элементов
 var lastid = 0;//счетчик id, число указывает на следующий id
+var lastSpellId = 0;
 var nowPlayerIndex=0;
+var nowSemiTarget;
 
 
+//тестовое заклинание
+
+const teleport = new Spell('Teleport','all',(me,target)=>{
+	me.setCoords(target);
+	console.log('magic');
+	nowSemiTarget=null;
+});
+
+const vampire = new Spell('LifeSteal','all',(me,target=nowSemiTarget)=>{
+	target.addHp(-30);
+	me.addHp(30);
+	console.log('vampire');
+	nowSemiTarget=null;
+});
 
 //Действия
 
@@ -264,36 +304,34 @@ const vm = new Vue({
 	data: {
 		nowMainSelect: undefined,//выбранный в данный момент юнит
 		step: 0,
+		test: '',
 	},
 	methods: {
 		
 	},
 	computed: {
 
-	}
+	},
 });
 
 
-Vue.component('bar', {
-	props: ['color1','color2','num','numof','width','height'],
+Vue.component('manabar', {
+	props: ['stats','width','height'],
 
 	template: `<div :style=style1>
-					<span :style=style3>{{num}}</span>
+					<span :style=style3>{{stats}}</span>
 					<div :style=style2>
 					</div>
 				</div>`,
-	// технически, data является функцией, так что Vue
-	// не будет жаловаться, но при каждом вызове эта функция
-	// возвращает ссылку на один и тот же объект компонента
 	computed: {
 		cwidth: function() {
-			return (this.num)?this.num/this.numof*100+"%":"100%";
+			return (this.stats)?this.stats/100*100+"%":"33.5%";
 		},
 		style1: function() {
-			return `background-color:${this.color1};text-align:center;width:${this.width};height:${this.height};line-height:${this.height};`;
+			return `background-color:lightblue;text-align:center;width:${this.width};height:${this.height};line-height:${this.height};`;
 		},
 		style2: function() {
-			return `background-color:${this.color2};width:${this.cwidth};height:${this.height}`;
+			return `background-color:blue;width:${this.cwidth};height:${this.height}`;
 		},
 		style3: function() {
 			return `position:absolute;width:${this.width};left:0;`
