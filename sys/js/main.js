@@ -296,7 +296,7 @@ var nowSemiTarget;
 
 //тестовое заклинание
 
-const teleport = new Spell('Teleport','all',40,(me,target,inputs)=>{
+const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
 	inputs=inputs.split(' ');
 	me.setCoords({x:inputs[0],y:inputs[1]});
 	console.log('magic');
