@@ -24,7 +24,7 @@
 		<br>
 		<div class='row'>
 			<button onclick='vm.nowMainSelect.move({x:-1})'><-</button>
-			<button>SKIP</button>
+			<button onclick='vm.nowMainSelect.move({})'>SKIP</button>
 			<button onclick='vm.nowMainSelect.move({x:1})'>-></button>
 		</div>
 		<br>
@@ -39,6 +39,7 @@
 			<bar :color1='"lightgreen"' :color2='"green"' :width='"100px"' :height='"30px"' :num='nowMainSelect.hp' :numof='nowMainSelect.hpMax'></bar>
 			<bar :color1='"lightblue"' :color2='"blue"' :width='"100px"' :height='"30px"' :num='nowMainSelect.mp' :numof='nowMainSelect.mpMax'></bar>
 		</div>
+		<span>Текущий ход: {{step}}</span>
 	</div>
 	<script type="text/javascript" src='sys/js/main.js'></script>
 </body>

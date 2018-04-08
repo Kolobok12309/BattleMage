@@ -27,7 +27,7 @@ function renderPole(x,y) {
 	maxY=y;
 	return true;
 }
-function sleep(ms) {
+function sleep(ms) {//Пример await sleep(500); в async function
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 function genWalls() {
@@ -49,25 +49,68 @@ function move({x:x=0,y:y=0}) {
 		if (x<-1) x=-1;
 		if (y<-1) y=-1;
 		const coords = this.getCoords();
-		this.setCoords({x:coords.x+x,y:coords.y+y});
+		if((x==0&&y==0)||this.setCoords({x:coords.x+x,y:coords.y+y})) {
+			this.steps++;
+			checkStep();
+		} else console.log('занято');
 	} else {
 		console.log('Цель обездвижена');
 	}
 }
 function checkBlock({x:xx,y:yy}) {
 	var state = true;
-	elems.units.forEach((obj)=>{
+	elems.units.gamers.forEach((obj)=>{
 		const coords = obj.getCoords();
-		if(coords.x==xx&&coords.y==yy) state=false;
+		if(coords.x==xx&&coords.y==yy) {
+			state=false;
+		}
+	});
+	elems.units.others.forEach((obj)=>{
+		const coords = obj.getCoords();
+		if(coords.x==xx&&coords.y==yy) {
+			state=false;
+		}
 	});
 	elems.walls.forEach((obj)=>{
 		const coords = obj.getCoords();
-		if(coords.x==xx&&coords.y==yy) state=false;
+		if(coords.x==xx&&coords.y==yy) {
+			state=false;
+		}
 	});
 	return state;
 }
 function rand(min,max) {//включая оба предела
 	return Math.floor(min+(max-min+1)*Math.random());
+}
+function checkStep() {
+	if(vm.nowMainSelect.steps>=vm.nowMainSelect.maxSteps) {
+		nextPlayer();
+	}
+}
+function nextPlayer() {
+	console.log('beg');
+	console.log('lvl0');
+	var state = true;
+	var f;
+	for(var i = 0;i<elems.units.gamers.length;i++) {
+		if(elems.units.gamers[i].steps<elems.units.gamers[i].maxSteps) {
+			//console.log('lvl2');
+			//elems.units.gamers[i].selectThis();
+			f=i;
+			state=false;
+			break;
+		}
+	}
+	if(state) {
+		elems.units.gamers.forEach((obj)=>{
+			obj.steps=0;
+		});
+		vm.step++;
+		//сюда функцию на баффы и дебаффы
+		elems.units.gamers[0].selectThis();
+	} else {
+		elems.units.gamers[f].selectThis();
+	}
 }
 
 //Классы
@@ -88,19 +131,27 @@ function unitMaker(x,y) {
 		if(vm.nowMainSelect) removeClass(vm.nowMainSelect.obj,'mainTarget');
 		vm.nowMainSelect=this;
 		addClass(this.obj,'mainTarget');
+		if(this.role=='Mage') nowPlayerIndex=elems.units.gamers.indexOf(this);
 	}
 
 	this.remove = function() {
 		this.obj.remove();
 		for(var i = 0;i<elems.units.length;i++) {
-			if(elems.units[i].id==this.id) elems.units.splice(i,1);
+			if(elems.units.gamers[i].id==this.id) {
+				elems.units.gamers.splice(i,1);
+				break;
+			}
+		}
+		for(var i = 0;i<elems.units.length;i++) {
+			if(elems.units.others[i].id==this.id) {
+				elems.units.others.splice(i,1);
+				break;
+			}
 		}
 		vm.nowMainSelect=undefined;
 		getId('hid').style.display='none';
 		delete this;
 	}
-
-	this.move = move;
 
 	this.getCoords = function() {
 		return {x:x,y:y};
@@ -112,7 +163,8 @@ function unitMaker(x,y) {
 			this.obj.style.top=`${(maxY-yy-1)*10}px`;
 			x=xx;
 			y=yy;
-		} else console.log('занято');
+			return true;
+		} else return false;
 	}
 
 	this.setCoords({x:x,y:y});
@@ -122,8 +174,11 @@ function unitMaker(x,y) {
 function Mage(team='default',name='default',x,y) {
 	unitMaker.call(this,x,y);
 	this.team=team;
+	this.role='Mage';
 	this.obj.style.backgroundColor='red';
 	this.name=name;
+	this.steps=0;
+	this.maxSteps=1;
 	this.hpMax=100;
 	this.mpMax=100;
 	this.hpMin=0;
@@ -131,7 +186,8 @@ function Mage(team='default',name='default',x,y) {
 	this.mp=100;
 	this.live=true;
 	this.magic=elems.magic;
-	elems.units.push(this);
+	nowPlayerIndex=elems.units.gamers.length;
+	elems.units.gamers.push(this);
 
 	this.addHp = function(hp) {
 		if(this.live) {
@@ -146,6 +202,8 @@ function Mage(team='default',name='default',x,y) {
 			console.log('Цель мертва');
 		}
 	}
+
+	this.move = move;
 
 	this.addMp = function(mp) {
 		if(this.live) {
@@ -176,7 +234,10 @@ function Wall(x,y) {
 var maxX;
 var maxY;
 var elems = {
-	units: [],//существа
+	units: {
+		gamers: [],
+		others: [],
+	},//существа
 	magic: [],//всевозможные заклинания
 	walls: [],//стены
 	activeMagic: [],//пущеные чары
@@ -187,7 +248,7 @@ var elems = {
 
 };//массив всех элементов
 var lastid = 0;//счетчик id, число указывает на следующий id
-var step = 0;
+var nowPlayerIndex=0;
 
 
 
@@ -202,6 +263,7 @@ const vm = new Vue({
 	el: '#hid',
 	data: {
 		nowMainSelect: undefined,//выбранный в данный момент юнит
+		step: 0,
 	},
 	methods: {
 		
