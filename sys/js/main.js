@@ -198,6 +198,7 @@ class Mage extends unitMaker {
 				updateVue();
 				//this.hp=0;
 				this.live=false;
+				console.log('Цель мертва');
 				this.canMove=false;
 			}
 		} else {
@@ -206,19 +207,23 @@ class Mage extends unitMaker {
 	}
 
 	move({x:x=0,y:y=0}) {
-		if(this.canMove) {
-			if (x>1) x=1;
-			if (y>1) y=1;
-			if (x<-1) x=-1;
-			if (y<-1) y=-1;
-			const coords = this.Coords;
-			this.Coords={x:coords.x+x-0,y:coords.y+y-0};
-			if((x==0&&y==0)||(coords.x!=this.Coords.x&&coords.y!=this.Coords.y)) {
-				this.steps++;
-				checkStep();
-			} else console.log('занято');
+		if(this.live) {
+			if(this.canMove) {
+				if (x>1) x=1;
+				if (y>1) y=1;
+				if (x<-1) x=-1;
+				if (y<-1) y=-1;
+				const coords = this.Coords;
+				this.Coords={x:coords.x+x-0,y:coords.y+y-0};
+				if((x==0&&y==0)||(coords.x!=this.Coords.x&&coords.y!=this.Coords.y)) {
+					this.steps++;
+					checkStep();
+				} else console.log('занято');
+			} else {
+				console.log('Цель обездвижена');
+			}
 		} else {
-			console.log('Цель обездвижена');
+			console.log('Цель мертва');
 		}
 	}
 
