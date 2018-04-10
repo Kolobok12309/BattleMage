@@ -2,26 +2,8 @@
 function getId(id) {
 	return document.getElementById(id);
 }
-function addClass(elem,classN) {
-	const arr = elem.className.split(' ');
-	var state = true;
-	arr.forEach((obj)=>{
-		if(obj==classN) state=false;
-	});
-	if(state) {
-		arr.push(classN);
-		elem.className=arr.join(' ');
-	}
-}
-function removeClass(elem,classN) {
-	const arr = elem.className.split(' ');
-	arr.forEach((obj, index)=>{
-		if(obj==classN) arr.splice(index,1);
-	});
-	elem.className=arr.join(' ');
-}
 function renderPole(x,y) {
-	var string = `<div id="test" style="width:${x*10}px;height:${y*10}px"></div>`;
+	var string = `<div id="test" style="width:${x*WIDTHBLOCK}px;height:${y*HEIGHTBLOCK}px"></div>`;
 	getId('pole').innerHTML=string;
 	maxX=x;
 	maxY=y;
@@ -60,19 +42,19 @@ function move({x:x=0,y:y=0}) {
 function checkBlock({x:xx,y:yy}) {
 	var state = true;
 	elems.units.gamers.forEach((obj)=>{
-		const coords = obj.getCoords();
+		const coords = obj.Coords;
 		if(coords.x==xx&&coords.y==yy) {
 			state=false;
 		}
 	});
 	elems.units.others.forEach((obj)=>{
-		const coords = obj.getCoords();
+		const coords = obj.Coords;
 		if(coords.x==xx&&coords.y==yy) {
 			state=false;
 		}
 	});
 	elems.walls.forEach((obj)=>{
-		const coords = obj.getCoords();
+		const coords = obj.Coords;
 		if(coords.x==xx&&coords.y==yy) {
 			state=false;
 		}
@@ -113,38 +95,44 @@ function nextPlayer() {
 
 //Классы
 
-function unitMaker(x,y) {
-	const self = this;
-	this.id=lastid++;
-	this.canMove=true;
-	const block = document.createElement('div');
-	block.className='unit';
-	block.gameBlock=this;
-	block.addEventListener('dblclick',()=>{
-		self.selectThis();
-	});
+class unitMaker {
+	constructor(x,y) {
+		const self = this;
+		this.x=x;
+		this.y=y;
+		this.id=lastid++;
+		this.canMove=true;
+		const block = document.createElement('div');
+		block.className='unit';
+		block.gameBlock=this;
+		block.addEventListener('dblclick',()=>{
+			self.selectThis();
+		});
 
-	block.addEventListener('click',()=>{
-		if(self.id!=vm.nowMainSelect.id) self.semiSelectThis();
-	});
+		block.addEventListener('click',()=>{
+			if(self.id!=vm.nowMainSelect.id) self.semiSelectThis();
+		});
 
-	getId('test').appendChild(block);
-	this.obj=block;
-
-	this.semiSelectThis = function(bb) {
-		if(nowSemiTarget) removeClass(nowSemiTarget.obj,'semiTarget');
-		nowSemiTarget=this;
-		addClass(this.obj,'semiTarget');
+		getId('test').appendChild(block);
+		this.obj=block;
+		this.Coords={x:x,y:y};
+		this.selectThis();
 	}
 
-	this.selectThis = function(bb) {
-		if(vm.nowMainSelect) removeClass(vm.nowMainSelect.obj,'mainTarget');
+	semiSelectThis(bb) {
+		if(nowSemiTarget) nowSemiTarget.obj.classList.remove('semiTarget');
+		nowSemiTarget=this;
+		this.obj.classList.add('semiTarget');
+	}
+
+	selectThis(bb) {
+		if(vm.nowMainSelect) vm.nowMainSelect.obj.classList.remove('mainTarget');
 		Vue.set(vm,'nowMainSelect',this);
-		addClass(this.obj,'mainTarget');
+		this.obj.classList.add('mainTarget');
 		if(this.role=='Mage') nowPlayerIndex=elems.units.gamers.indexOf(this);
 	}
 
-	this.remove = function() {
+	remove() {
 		this.obj.remove();
 		for(var i = 0;i<elems.units.length;i++) {
 			if(elems.units.gamers[i].id==this.id) {
@@ -163,45 +151,43 @@ function unitMaker(x,y) {
 		delete this;
 	}
 
-	this.getCoords = function() {
-		return {x:x,y:y};
+	get Coords() {
+		return {x:this.x,y:this.y};
 	}
 
-	this.setCoords = function({x:xx,y:yy}) {
+	set Coords({x:xx,y:yy}) {
 		if(checkBlock({x:xx,y:yy})) {
-			this.obj.style.left=`${xx*10}px`;
-			this.obj.style.top=`${(maxY-yy-1)*10}px`;
-			x= xx-0;
-			y= yy-0;
-			return true;
-		} else return false;
+			this.obj.style.left=`${xx*WIDTHBLOCK}px`;
+			this.obj.style.top=`${(maxY-yy-1)*HEIGHTBLOCK}px`;
+			this.x= xx-0;
+			this.y= yy-0;
+		};
 	}
-
-	this.setCoords({x:x,y:y});
-	this.selectThis();
 }
 
-function Mage(team='default',name='default',x,y) {
-	unitMaker.call(this,x,y);
-	this.team=team;
-	this.role='Mage';
-	this.obj.style.backgroundColor='red';
-	this.name=name;
-	this.steps=0;
-	this.stats = {
-		hp: 100,
-		hpMax: 100,
-		hpMin: 0,
-		mp: 100,
-		mpMax: 100,
+class Mage extends unitMaker {
+	constructor(team='default',name='default',x,y) {
+		super(x,y);
+		this.team=team;
+		this.role='Mage';
+		this.obj.style.backgroundColor='red';
+		this.name=name;
+		this.steps=0;
+		this.stats = {
+			hp: 100,
+			hpMax: 100,
+			hpMin: 0,
+			mp: 100,
+			mpMax: 100,
+		}
+		this.maxSteps=1;
+		this.live=true;
+		this.magic=elems.magic;
+		nowPlayerIndex=elems.units.gamers.length;
+		elems.units.gamers.push(this);
 	}
-	this.maxSteps=1;
-	this.live=true;
-	this.magic=elems.magic;
-	nowPlayerIndex=elems.units.gamers.length;
-	elems.units.gamers.push(this);
 
-	this.addHp = function(hp) {
+	addHp(hp) {
 		if(this.live) {
 			Vue.set(this.stats,'hp',this.stats.hp+hp);
 			updateVue();
@@ -219,9 +205,24 @@ function Mage(team='default',name='default',x,y) {
 		}
 	}
 
-	this.move = move;
+	move({x:x=0,y:y=0}) {
+		if(this.canMove) {
+			if (x>1) x=1;
+			if (y>1) y=1;
+			if (x<-1) x=-1;
+			if (y<-1) y=-1;
+			const coords = this.Coords;
+			this.Coords={x:coords.x+x-0,y:coords.y+y-0};
+			if((x==0&&y==0)||(coords.x!=this.Coords.x&&coords.y!=this.Coords.y)) {
+				this.steps++;
+				checkStep();
+			} else console.log('занято');
+		} else {
+			console.log('Цель обездвижена');
+		}
+	}
 
-	this.addMp = function(mp) {
+	addMp(mp) {
 		if(this.live) {
 			//this.stats.mp+=mp;
 			Vue.set(this.stats,'mp',this.stats.mp+mp);
@@ -236,11 +237,11 @@ function Mage(team='default',name='default',x,y) {
 		}
 	}
 
-	this.preCast = function(id) {//при выборе заклинания выбираются кол-во целей итд
+	preCast(id) {//при выборе заклинания выбираются кол-во целей итд
 
 	}
 
-	this.cast = function(id,target) {//сам каст
+	cast(id,target) {//сам каст
 		elems.spells[id].cast(this,target);
 	}
 
@@ -252,22 +253,24 @@ function Wall(x,y) {
 	elems.walls.push(this);
 }
 
-function Spell(name,targets,manacost,callback,input=false) {
-	this.id=lastSpellId++;
-	this.name=name;
-	this.targets=targets;
-	this.manacost=manacost;
-	this.input=input;
-	this.cast=function(me, target=nowSemiTarget) {
-		if(me.stats.mp>manacost) {
-			console.log(this.manacost);
-			if(this.input) inputs=getId('spellInput').value;
-			callback.call(this, me, target, inputs);
-			me.addMp(-manacost);
+class Spell {
+	constructor(name,targets,manacost,callback,input=false) {
+		this.id=lastSpellId++;
+		this.name=name;
+		this.targets=targets;
+		this.manacost=manacost;
+		this.input=input;
+		this.cast=function(me, target=nowSemiTarget) {
+			if(me.stats.mp>manacost) {
+				console.log(this.manacost);
+				const inputs=getId('spellInput').value;
+				callback.call(this, me, target, inputs);
+				me.addMp(-manacost);
+			}
+			else console.log('Недостаточно маны');
 		}
-		else console.log('Недостаточно маны');
+		elems.spells.push(this);
 	}
-	elems.spells.push(this);
 }
 
 //Свойства
@@ -292,13 +295,15 @@ var lastid = 0;//счетчик id, число указывает на след�
 var lastSpellId = 0;
 var nowPlayerIndex=0;
 var nowSemiTarget;
+const HEIGHTBLOCK = 10;
+const WIDTHBLOCK = 10;
 
 
 //тестовое заклинание
 
 const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
 	inputs=inputs.split(' ');
-	me.setCoords({x:inputs[0],y:inputs[1]});
+	me.Coords={x:inputs[0],y:inputs[1]};
 	console.log('magic');
 	//nowSemiTarget=null;
 },true);

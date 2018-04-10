@@ -11,8 +11,8 @@
 <body>
 	<div id='pole'></div>
 	<br>
-	<button class='button-primary' onclick='vm.nowMainSelect = new Mage("team","name",maxX-1,maxY-1);getId("hid").style.display="block";'>Создать блок</button>
-	<button onclick='vm.nowMainSelect = new Wall(maxX-1,maxY);getId("hid").style.display="block";'>Создать стену</button>
+	<button class='button-primary' onclick='new Mage("team","name",maxX-1,maxY-1);getId("hid").style.display="block";'>Создать блок</button>
+	<button onclick='new Wall(maxX-1,maxY);getId("hid").style.display="block";'>Создать стену</button>
 	<button onclick='if(vm.nowMainSelect) m(5);else alert("создайте блок");'>запустить мага по траектории с параметром 5</button>
 	<button onclick='genWalls()'>Создать границы</button>
 	<div id='hid' style='display: none'>
