@@ -36,7 +36,7 @@
 		<br>
 		<div id='cast'>
 			<select v-model='spellId'>
-				<option v-for="spell in spells" :value='spell.id'>{{spell.name}}</option>
+				<option v-for="spell in spells" :value='spell.id'>{{spell.name+"("+spell.manacost+")"}}</option>
 			</select>
 			<input  v-on:keyup.enter='nowMainSelect.cast(spellId)' v-show='spells[spellId]&&spells[spellId].input' id='spellInput' placeholder="Особые параметры заклинания">
 			<button class='button-primary' v-on:click='nowMainSelect.cast(spellId)'>CAST</button>

@@ -7,6 +7,33 @@ function renderPole(x,y) {
 	getId('pole').innerHTML=string;
 	maxX=x;
 	maxY=y;
+	const block = document.createElement('div');
+	block.className='semiTarget';
+	block.style.position='absolute';
+	block.style.left='0px';
+	block.style.top=`${(y-1)*HEIGHTBLOCK}px`;
+	block.style.width=`${WIDTHBLOCK}px`;
+	block.style.height=`${HEIGHTBLOCK}px`;
+	block.x=0;
+	block.y=y-1;
+	getId('test').appendChild(block);
+	block.addEventListener('click',()=>{
+		if(nowSemiTarget) {
+			const last = getUnitByCoords(nowSemiTarget);
+			if(last) last.obj.classList.remove('semiTarget');
+		}
+		nowSemiTarget={x: block.x,y:block.y};
+	});
+	getId('test').addEventListener('mousemove',function(e){
+		if(e.clientX+WIDTHBLOCK/2<x*WIDTHBLOCK&&e.clientY+HEIGHTBLOCK/2<y*HEIGHTBLOCK&&e.clientX-WIDTHBLOCK/2>0&&e.clientY-HEIGHTBLOCK/2>0) {
+			var xx = Math.ceil(e.clientX/WIDTHBLOCK)-1;
+			var yy = Math.ceil(e.clientY/HEIGHTBLOCK)-1;
+			block.x=xx;
+			block.y=maxY-yy-1;
+			block.style.left=`${xx*WIDTHBLOCK}px`;
+			block.style.top=`${yy*HEIGHTBLOCK}px`;
+		}
+	});
 	return true;
 }
 function sleep(ms) {//Пример await sleep(500); в async function
@@ -92,6 +119,16 @@ function nextPlayer() {
 		elems.units.gamers[f].selectThis();
 	}
 }
+function getUnitByCoords(coords) {
+	var result=false;
+	elems.units.gamers.forEach(function(obj) {
+		if(obj.Coords.x===coords.x&&obj.Coords.y===coords.y) result = obj;
+	});
+	elems.units.others.forEach(function(obj) {
+		if(obj.Coords.x===coords.x&&obj.Coords.y===coords.y) result = obj;
+	});
+	return result;
+}
 
 //Классы
 
@@ -120,8 +157,8 @@ class unitMaker {
 	}
 
 	semiSelectThis(bb) {
-		if(nowSemiTarget) nowSemiTarget.obj.classList.remove('semiTarget');
-		nowSemiTarget=this;
+		if(nowSemiTarget&&getUnitByCoords(nowSemiTarget)) getUnitByCoords(nowSemiTarget).obj.classList.remove('semiTarget');
+		nowSemiTarget=this.Coords;
 		this.obj.classList.add('semiTarget');
 	}
 
@@ -159,8 +196,8 @@ class unitMaker {
 		if(checkBlock({x:xx,y:yy})) {
 			this.obj.style.left=`${xx*WIDTHBLOCK}px`;
 			this.obj.style.top=`${(maxY-yy-1)*HEIGHTBLOCK}px`;
-			this.x= xx-0;
-			this.y= yy-0;
+			this.x=xx-0;
+			this.y=yy-0;
 		};
 	}
 }
@@ -266,15 +303,28 @@ class Spell {
 		this.manacost=manacost;
 		this.input=input;
 		this.cast=function(me, target=nowSemiTarget) {
-			if(me.stats.mp>manacost) {
+			if(me.stats.mp>=manacost) {
 				console.log(this.manacost);
+				if(targets=='unit') {
+					target = getUnitByCoords(target);
+					if(!target) {
+						console.log('Цель не выбрана');
+						return;
+					}
+				}
 				const inputs=getId('spellInput').value;
-				callback.call(this, me, target, inputs);
+				callback.call(this, me, target);
 				me.addMp(-manacost);
 			}
 			else console.log('Недостаточно маны');
 		}
 		elems.spells.push(this);
+	}
+}
+
+class Buff {
+	constructor() {
+		
 	}
 }
 
@@ -307,13 +357,12 @@ const WIDTHBLOCK = 10;
 //тестовое заклинание
 
 const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
-	inputs=inputs.split(' ');
-	me.Coords={x:inputs[0],y:inputs[1]};
+	me.Coords=target;
 	console.log('magic');
 	//nowSemiTarget=null;
-},true);
+},false);
 
-const vampire = new Spell('LifeSteal','all',30,function(me,target) {
+const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
 	target.addHp(-30);
 	me.addHp(30);
 	//nowSemiTarget=null;
