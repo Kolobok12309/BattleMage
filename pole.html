@@ -10,6 +10,7 @@
 	<script type="text/javascript" src='sys/js/classes.js'></script>
 	<script type="text/javascript" src='sys/js/buffs.js'></script>
 	<script type="text/javascript" src='sys/js/bottles.js'></script>
+	<script type="text/javascript" src='sys/js/spells.js'></script>
 </head>
 <body>
 	<div id='pole'></div>
@@ -47,27 +48,26 @@
 			width:game.level.WIDTHBLOCK+"px",
 			height: game.level.HEIGHTBLOCK+"px",
 			left: gamer.x*game.level.WIDTHBLOCK+"px",
-			top: (game.level.maxY-gamer.y)*game.level.HEIGHTBLOCK+"px",
+			top: (game.level.maxY-gamer.y-1)*game.level.HEIGHTBLOCK+"px",
 			backgroundColor: "red"
 			}'>	
 		</div>
 
 		<div id='cast'>
 			<select v-model='spellId'>
-				<option v-for="spell in spells" :value='spell.id'>{{spell.name+"("+spell.manacost+")"}}</option>
+				<option v-for="spell in game.magic.spells" :value='spell.id'>{{spell.name+"("+spell.manacost+")"}}</option>
 			</select>
-			<button class='button-primary' v-on:click='nowMainSelect.cast(spellId)'>CAST</button>
+			<button class='button-primary' v-on:click='game.nowMainSelect.cast(spellId)'>CAST</button>
 		</div>
 		<br>
 		<button onclick='Game1.nowMainSelect.remove()'>DELETE</button>
-		<div v-if='nowMainSelect&&nowMainSelect.stats'>
+		<div v-if='game.nowMainSelect&&game.nowMainSelect.stats'>
 			<input v-model='update' type="hidden">
-			<healthbar :width='"100px"' :height='"30px"' :hp='nowMainSelect.stats.hp' :hp-max='nowMainSelect.stats.hpMax'></healthbar>
-			<manabar :width='"100px"' :height='"30px"' :mp='nowMainSelect.stats.mp' :mp-max='nowMainSelect.stats.mpMax'></manabar>
+			<healthbar :width='"100px"' :height='"30px"' :hp='game.nowMainSelect.stats.hp' :hp-max='game.nowMainSelect.stats.hpMax'></healthbar>
+			<manabar :width='"100px"' :height='"30px"' :mp='game.nowMainSelect.stats.mp' :mp-max='game.nowMainSelect.stats.mpMax'></manabar>
 		</div>
 		<span>Текущий ход: {{step}}</span>
 	</div>
 	<script type="text/javascript" src='sys/js/main.js'></script>
-	<script type="text/javascript" src='sys/js/spells.js'></script>
 </body>
 </html>

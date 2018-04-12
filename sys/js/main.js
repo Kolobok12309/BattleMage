@@ -62,15 +62,8 @@ function rand(min,max) {//включая оба предела
 const HEIGHTBLOCK = 10;
 const WIDTHBLOCK = 10;
 
-var games = [];
-
 var Game1 = new Game(80,WIDTHBLOCK,40,HEIGHTBLOCK);
 
-var elems = {
-	spells: [],//всевозможные заклинания
-	buffs: [],//баффы
-	bottles: [],//склянки/хилки возможные
-};//массив всех элементов
 var lastid = 0;//счетчик id, число указывает на следующий id
 var lastSpellId = 0;
 var lastBuffId = 0;
@@ -92,7 +85,6 @@ const vm = new Vue({
 	data: {
 		game: Game1,
 		nowMainSelect: Game1.nowMainSelect,//выбранный в данный момент юнит
-		spells: elems.spells,
 		step: 0,
 		update: false,//костыль
 		spellId: '',
@@ -150,3 +142,16 @@ Vue.component('healthbar', {
 		}
 	}
 });
+
+
+const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
+	me.Coords=target;
+	console.log('magic');
+	//nowSemiTarget=null;
+},0);
+
+const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
+	target.addHp(-30);
+	me.addHp(30);
+	//nowSemiTarget=null;
+},0);

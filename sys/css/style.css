@@ -8,6 +8,7 @@
 	margin: 0;
 	display: inline-block;
 	background-color: lightgray;
+	pointer-events: none;
 }
 .col:hover {
 	background-color: darkgray;
@@ -22,6 +23,7 @@
 #cursor {
 	position: absolute;
 	display: none;
+	z-index: 5;
 }
 .mainTarget {
 	margin: -1.5px;

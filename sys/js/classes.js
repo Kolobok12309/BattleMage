@@ -136,7 +136,7 @@ class Mage extends unitMaker {
 	}
 
 	cast(id,target) {//сам каст
-		elems.spells[id].cast(this,target);
+		games[this.gameId].magic.spells[id].cast(this,target);
 	}
 
 	addBuff(buff) {
@@ -170,24 +170,33 @@ class Wall extends unitMaker {
 }
 
 class Spell {
-	constructor(name,targets,manacost,callback) {
+	constructor(name,targets,manacost,callback,gameId) {
+		this.id=games[gameId].magic.spells.length;
 		this.name=name;
 		this.targets=targets;
 		this.manacost=manacost;
-		elems.spells.push(this);
-		this.cast=function(me, target=nowSemiTarget) {
+		this.gameId=gameId;
+		games[gameId].magic.spells.push(this);
+		this.cast=function(me, target=games[gameId].nowMainTarget) {
+			if(target===null&&targets!='self') {
+				console.log('Цель не выбрана');
+				return;
+			}
 			if(me.stats.mp>=manacost) {
-				console.log(this.manacost);
 				if(targets=='unit') {
-					target = getUnitByCoords(target);
+					target = games[this.gameId].level.getElemByCoords(target);
 					if(!target) {
 						console.log('Цель не выбрана');
 						return;
 					}
+				} else if(target=='self') {
+					target=me;
 				}
-				const inputs=getId('spellInput').value;
+				//const inputs=getId('spellInput').value;
 				callback.call(this, me, target);
 				me.addMp(-manacost);
+				games[gameId].nowMainTarget=null;
+				getId('MainTarget').remove();
 			}
 			else console.log('Недостаточно маны');
 		}
@@ -297,7 +306,7 @@ class HTMLLevel extends Level {
 			}
 		});
 
-		getId('cursor').addEventListener('click',function(){
+		cursor.addEventListener('click',function(){
 			//console.log(cursor.Coords.x+':'+cursor.Coords.y);
 			var target;
 			if(games[self.gameId].nowMainTarget) {
@@ -310,9 +319,16 @@ class HTMLLevel extends Level {
 				target.style.height=self.HEIGHTBLOCK+'px';
 				pole.appendChild(target);
 			}
-			target.style.left=cursor.style.left;
-			target.style.top=cursor.style.top;
-			games[self.gameId].nowMainTarget=cursor.Coords;
+			target.style.left=this.style.left;
+			target.style.top=this.style.top;
+			games[self.gameId].nowMainTarget=this.Coords;
+		});
+
+		cursor.addEventListener('dblclick',function(){
+			const target = games[self.gameId].level.getElemByCoords(cursor.Coords);
+			if(target) {
+				games[self.gameId].nowMainSelect=target;
+			}
 		});
 	}
 }
@@ -323,6 +339,11 @@ class Game {
 		this.level=new HTMLLevel(x,WIDTH,y,HEIGHT,this.gameId);
 		this.nowMainSelect=null;
 		this.nowMainTarget=null;
+		this.magic = {
+			spells: [],//всевозможные заклинания
+			buffs: [],//баффы
+			bottles: [],//склянки/хилки возможные
+		}
 		//this.nowSemiTarget=null;
 		this.lastGamerId = 0;
 		games.push(this);
@@ -332,6 +353,11 @@ class Game {
 		if(this.nowMainSelect.steps>=this.nowMainSelect.maxSteps) {
 			this.nextPlayer();
 		}
+	}
+
+	addSpell(name,targets,manacost,callback) {
+		const newSpell = new Spell(name,targets,manacost,callback,this.gameId);
+		this.magic.spells.push(newSpell);
 	}
 
 	addMage(team,name,x,y) {
@@ -378,3 +404,5 @@ class Game {
 		}
 	}
 }
+
+var games = [];
