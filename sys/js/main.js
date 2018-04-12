@@ -113,6 +113,11 @@ function nextPlayer() {
 			obj.steps=0;
 		});
 		vm.step++;
+		elems.units.gamers.forEach(function(obj){
+			obj.buffs.forEach(function(buff) {
+				elems.buffs[buff].cast(obj);
+			});
+		});
 		//сюда функцию на баффы и дебаффы
 		elems.units.gamers[0].selectThis();
 	} else {
@@ -219,6 +224,7 @@ class Mage extends unitMaker {
 		}
 		this.maxSteps=1;
 		this.live=true;
+		this.buffs=[];
 		this.magic=elems.magic;
 		nowPlayerIndex=elems.units.gamers.length;
 		elems.units.gamers.push(this);
@@ -323,8 +329,17 @@ class Spell {
 }
 
 class Buff {
-	constructor() {
-		
+	constructor(times, delaySteps, name, state, callback) {
+		this.id=lastBuffId++;
+		this.name=name;
+		this.times=times;
+		this.delaySteps=delaySteps;
+		this.nowStep=0;
+		this.state=(state)?'Buff':'Debuff';
+		this.cast=function(target) {
+			callback(target);
+		}
+		elems.buffs.push(this);
 	}
 }
 
@@ -348,6 +363,7 @@ var elems = {
 };//массив всех элементов
 var lastid = 0;//счетчик id, число указывает на следующий id
 var lastSpellId = 0;
+var lastBuffId = 0;
 var nowPlayerIndex=0;
 var nowSemiTarget;
 const HEIGHTBLOCK = 10;
@@ -366,6 +382,12 @@ const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
 	target.addHp(-30);
 	me.addHp(30);
 	//nowSemiTarget=null;
+});
+
+//баффы
+
+const dmg = new Buff(3, 0, 'RegDmg', 0, function(unit) {
+	unit.addHp(-10);
 });
 
 //Действия
