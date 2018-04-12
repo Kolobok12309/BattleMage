@@ -7,45 +7,59 @@
 	<link rel="stylesheet" href="sys/css/normalize.css">
 	<link rel="stylesheet" href="sys/css/skeleton.css">
 	<script type="text/javascript" src='sys/js/vue.js'></script>
+	<script type="text/javascript" src='sys/js/classes.js'></script>
+	<script type="text/javascript" src='sys/js/buffs.js'></script>
+	<script type="text/javascript" src='sys/js/bottles.js'></script>
 </head>
 <body>
 	<div id='pole'></div>
+
+
 	<br>
-	<button class='button-primary' onclick='new Mage("team","name",maxX-1,maxY-1);getId("hid").style.display="block";'>Создать блок</button>
-	<button onclick='new Wall(maxX-1,maxY-1);getId("hid").style.display="block";'>Создать стену</button>
-	<button onclick='if(vm.nowMainSelect) m(5);else alert("создайте блок");'>запустить мага по траектории с параметром 5</button>
+	<button class='button-primary' onclick='Game1.addMage("team","name",Game1.level.maxX-1,Game1.level.maxY-1);getId("hid").style.display="block";'>Создать блок</button>
+	<button onclick='Game1.addWall(Game1.level.maxX-1,Game1.level.maxY-1);getId("hid").style.display="block";'>Создать стену</button>
 	<button onclick='genWalls()'>Создать границы</button>
 	<div id='hid' style='display: none'>
 		<div class='row'>
-			<button onclick='vm.nowMainSelect.move({x:-1,y:1})'>\</button>
-			<button onclick='vm.nowMainSelect.move({y:1})'>/\</button>
-			<button onclick='vm.nowMainSelect.move({x:1,y:1})'>/-</button>
+			<button onclick='Game1.nowMainSelect.move({x:-1,y:1})'>\</button>
+			<button onclick='Game1.nowMainSelect.move({y:1})'>/\</button>
+			<button onclick='Game1.nowMainSelect.move({x:1,y:1})'>/-</button>
 		</div>
 		<br>
 		<br>
 		<div class='row'>
-			<button onclick='vm.nowMainSelect.move({x:-1})'><-</button>
-			<button onclick='vm.nowMainSelect.move({})'>SKIP</button>
-			<button onclick='vm.nowMainSelect.move({x:1})'>-></button>
+			<button onclick='Game1.nowMainSelect.move({x:-1})'><-</button>
+			<button onclick='Game1.nowMainSelect.move({})'>SKIP</button>
+			<button onclick='Game1.nowMainSelect.move({x:1})'>-></button>
 		</div>
 		<br>
 		<br>
 		<div class='row'>
-			<button onclick='vm.nowMainSelect.move({x:-1,y:-1})'>/_</button>
-			<button onclick='vm.nowMainSelect.move({y:-1})'>\/</button>
-			<button onclick='vm.nowMainSelect.move({x:1,y:-1})'>_\</button>
+			<button onclick='Game1.nowMainSelect.move({x:-1,y:-1})'>/_</button>
+			<button onclick='Game1.nowMainSelect.move({y:-1})'>\/</button>
+			<button onclick='Game1.nowMainSelect.move({x:1,y:-1})'>_\</button>
 		</div>
 		<br>
 		<br>
+
+		<div v-for='gamer in game.level.elems.units.gamers' class='unit' :class='{mainTarget: game.nowMainSelect==gamer}'
+			:style='{
+			width:game.level.WIDTHBLOCK+"px",
+			height: game.level.HEIGHTBLOCK+"px",
+			left: gamer.x*game.level.WIDTHBLOCK+"px",
+			top: (game.level.maxY-gamer.y)*game.level.HEIGHTBLOCK+"px",
+			backgroundColor: "red"
+			}'>	
+		</div>
+
 		<div id='cast'>
 			<select v-model='spellId'>
 				<option v-for="spell in spells" :value='spell.id'>{{spell.name+"("+spell.manacost+")"}}</option>
 			</select>
-			<input  v-on:keyup.enter='nowMainSelect.cast(spellId)' v-show='spells[spellId]&&spells[spellId].input' id='spellInput' placeholder="Особые параметры заклинания">
 			<button class='button-primary' v-on:click='nowMainSelect.cast(spellId)'>CAST</button>
 		</div>
 		<br>
-		<button onclick='vm.nowMainSelect.remove()'>DELETE</button>
+		<button onclick='Game1.nowMainSelect.remove()'>DELETE</button>
 		<div v-if='nowMainSelect&&nowMainSelect.stats'>
 			<input v-model='update' type="hidden">
 			<healthbar :width='"100px"' :height='"30px"' :hp='nowMainSelect.stats.hp' :hp-max='nowMainSelect.stats.hpMax'></healthbar>
@@ -54,5 +68,6 @@
 		<span>Текущий ход: {{step}}</span>
 	</div>
 	<script type="text/javascript" src='sys/js/main.js'></script>
+	<script type="text/javascript" src='sys/js/spells.js'></script>
 </body>
 </html>

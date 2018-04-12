@@ -5,8 +5,6 @@
 }
 .unit {
 	position: absolute;
-	width: 10px;
-	height: 10px;
 	margin: 0;
 	display: inline-block;
 	background-color: lightgray;
@@ -14,14 +12,16 @@
 .col:hover {
 	background-color: darkgray;
 }
-#test {
-	background-color: lightgray;
-}
 .semiTarget {
+	position: absolute;
 	margin: -0.75px;
 	border:solid;
 	border-color: black;
 	border-width: 0.75px;
+}
+#cursor {
+	position: absolute;
+	display: none;
 }
 .mainTarget {
 	margin: -1.5px;

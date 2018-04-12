@@ -2,40 +2,40 @@
 function getId(id) {
 	return document.getElementById(id);
 }
-function renderPole(x,y) {
-	var string = `<div id="test" style="width:${x*WIDTHBLOCK}px;height:${y*HEIGHTBLOCK}px"></div>`;
-	getId('pole').innerHTML=string;
-	maxX=x;
-	maxY=y;
-	const block = document.createElement('div');
-	block.className='semiTarget';
-	block.style.position='absolute';
-	block.style.left='0px';
-	block.style.top=`${(y-1)*HEIGHTBLOCK}px`;
-	block.style.width=`${WIDTHBLOCK}px`;
-	block.style.height=`${HEIGHTBLOCK}px`;
-	block.x=0;
-	block.y=y-1;
-	getId('test').appendChild(block);
-	block.addEventListener('click',()=>{
-		if(nowSemiTarget) {
-			const last = getUnitByCoords(nowSemiTarget);
-			if(last) last.obj.classList.remove('semiTarget');
-		}
-		nowSemiTarget={x: block.x,y:block.y};
-	});
-	getId('test').addEventListener('mousemove',function(e){
-		if(e.clientX+WIDTHBLOCK/2<x*WIDTHBLOCK&&e.clientY+HEIGHTBLOCK/2<y*HEIGHTBLOCK&&e.clientX-WIDTHBLOCK/2>0&&e.clientY-HEIGHTBLOCK/2>0) {
-			var xx = Math.ceil(e.clientX/WIDTHBLOCK)-1;
-			var yy = Math.ceil(e.clientY/HEIGHTBLOCK)-1;
-			block.x=xx;
-			block.y=maxY-yy-1;
-			block.style.left=`${xx*WIDTHBLOCK}px`;
-			block.style.top=`${yy*HEIGHTBLOCK}px`;
-		}
-	});
-	return true;
-}
+// function renderPole(x,y) {
+// 	var string = `<div id="test" style="width:${x*WIDTHBLOCK}px;height:${y*HEIGHTBLOCK}px"></div>`;
+// 	getId('pole').innerHTML=string;
+// 	maxX=x;
+// 	maxY=y;
+// 	const block = document.createElement('div');
+// 	block.className='semiTarget';
+// 	block.style.position='absolute';
+// 	block.style.left='0px';
+// 	block.style.top=`${(y-1)*HEIGHTBLOCK}px`;
+// 	block.style.width=`${WIDTHBLOCK}px`;
+// 	block.style.height=`${HEIGHTBLOCK}px`;
+// 	block.x=0;
+// 	block.y=y-1;
+// 	getId('test').appendChild(block);
+// 	block.addEventListener('click',()=>{
+// 		if(nowSemiTarget) {
+// 			const last = getUnitByCoords(nowSemiTarget);
+// 			if(last) last.obj.classList.remove('semiTarget');
+// 		}
+// 		nowSemiTarget={x: block.x,y:block.y};
+// 	});
+// 	getId('test').addEventListener('mousemove',function(e){
+// 		if(e.clientX+WIDTHBLOCK/2<x*WIDTHBLOCK&&e.clientY+HEIGHTBLOCK/2<y*HEIGHTBLOCK&&e.clientX-WIDTHBLOCK/2>0&&e.clientY-HEIGHTBLOCK/2>0) {
+// 			var xx = Math.ceil(e.clientX/WIDTHBLOCK)-1;
+// 			var yy = Math.ceil(e.clientY/HEIGHTBLOCK)-1;
+// 			block.x=xx;
+// 			block.y=maxY-yy-1;
+// 			block.style.left=`${xx*WIDTHBLOCK}px`;
+// 			block.style.top=`${yy*HEIGHTBLOCK}px`;
+// 		}
+// 	});
+// 	return true;
+// }
 function sleep(ms) {//Пример await sleep(500); в async function
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -51,382 +51,38 @@ function genWalls() {
 		new Wall(i,maxY-1);
 	}
 }
-function move({x:x=0,y:y=0}) {
-	if(this.canMove) {
-		if (x>1) x=1;
-		if (y>1) y=1;
-		if (x<-1) x=-1;
-		if (y<-1) y=-1;
-		const coords = this.getCoords();
-		if((x==0&&y==0)||(checkBlock({x:coords.x+x-0,y:coords.y+y-0}))) {
-			this.Coords({x:coords.x+x-0,y:coords.y+y-0})
-			this.steps++;
-			checkStep();
-		} else console.log('занято');
-	} else {
-		console.log('Цель обездвижена');
-	}
-}
-function checkBlock({x:xx,y:yy}) {
-	var state = true;
-	elems.units.gamers.forEach((obj)=>{
-		const coords = obj.Coords;
-		if(coords.x==xx&&coords.y==yy) {
-			state=false;
-		}
-	});
-	elems.units.others.forEach((obj)=>{
-		const coords = obj.Coords;
-		if(coords.x==xx&&coords.y==yy) {
-			state=false;
-		}
-	});
-	elems.walls.forEach((obj)=>{
-		const coords = obj.Coords;
-		if(coords.x==xx&&coords.y==yy) {
-			state=false;
-		}
-	});
-	return state;
-}
 function rand(min,max) {//включая оба предела
 	return Math.floor(min+(max-min+1)*Math.random());
 }
-function checkStep() {
-	if(vm.nowMainSelect.steps>=vm.nowMainSelect.maxSteps) {
-		nextPlayer();
-	}
-}
-function nextPlayer() {
-	var state = true;
-	var f;
-	for(var i = 0;i<elems.units.gamers.length;i++) {
-		if(elems.units.gamers[i].steps<elems.units.gamers[i].maxSteps) {
-			//console.log('lvl2');
-			//elems.units.gamers[i].selectThis();
-			f=i;
-			state=false;
-			break;
-		}
-	}
-	if(state) {
-		elems.units.gamers.forEach((obj)=>{
-			obj.steps=0;
-		});
-		vm.step++;
-		elems.units.gamers.forEach(function(obj){
-			obj.buffs.forEach(function(buff) {
-				if(buff.nowStep<buff.ticks) {
-					buff.cast(obj);
-					if(buff.nowStep===buff.ticks) obj.delBuff(buff);
-				} else {
-					obj.delBuff(buff);
-				}
-			});
-		});
-		//сюда функцию на баффы и дебаффы
-		elems.units.gamers[0].selectThis();
-	} else {
-		elems.units.gamers[f].selectThis();
-	}
-}
-function getUnitByCoords(coords) {
-	var result=false;
-	elems.units.gamers.forEach(function(obj) {
-		if(obj.Coords.x===coords.x&&obj.Coords.y===coords.y) result = obj;
-	});
-	elems.units.others.forEach(function(obj) {
-		if(obj.Coords.x===coords.x&&obj.Coords.y===coords.y) result = obj;
-	});
-	return result;
-}
-
 //Классы
 
-class unitMaker {
-	constructor(x,y) {
-		const self = this;
-		this.x=x;
-		this.y=y;
-		this.id=lastid++;
-		this.canMove=true;
-		const block = document.createElement('div');
-		block.className='unit';
-		block.gameBlock=this;
-		block.addEventListener('dblclick',()=>{
-			self.selectThis();
-		});
-
-		block.addEventListener('click',()=>{
-			if(self.id!=vm.nowMainSelect.id) self.semiSelectThis();
-		});
-
-		getId('test').appendChild(block);
-		this.obj=block;
-		this.Coords={x:x,y:y};
-		this.selectThis();
-	}
-
-	semiSelectThis(bb) {
-		if(nowSemiTarget&&getUnitByCoords(nowSemiTarget)) getUnitByCoords(nowSemiTarget).obj.classList.remove('semiTarget');
-		nowSemiTarget=this.Coords;
-		this.obj.classList.add('semiTarget');
-	}
-
-	selectThis(bb) {
-		if(vm.nowMainSelect) vm.nowMainSelect.obj.classList.remove('mainTarget');
-		Vue.set(vm,'nowMainSelect',this);
-		this.obj.classList.add('mainTarget');
-		if(this.role=='Mage') nowPlayerIndex=elems.units.gamers.indexOf(this);
-	}
-
-	remove() {
-		this.obj.remove();
-		for(var i = 0;i<elems.units.length;i++) {
-			if(elems.units.gamers[i].id==this.id) {
-				elems.units.gamers.splice(i,1);
-				break;
-			}
-		}
-		for(var i = 0;i<elems.units.length;i++) {
-			if(elems.units.others[i].id==this.id) {
-				elems.units.others.splice(i,1);
-				break;
-			}
-		}
-		vm.nowMainSelect=undefined;
-		getId('hid').style.display='none';
-		delete this;
-	}
-
-	get Coords() {
-		return {x:this.x,y:this.y};
-	}
-
-	set Coords({x:xx,y:yy}) {
-		this.obj.style.left=`${xx*WIDTHBLOCK}px`;
-		this.obj.style.top=`${(maxY-yy-1)*HEIGHTBLOCK}px`;
-		this.x=xx-0;
-		this.y=yy-0;
-	}
-}
-
-class Mage extends unitMaker {
-	constructor(team='default',name='default',x,y) {
-		super(x,y);
-		this.team=team;
-		this.role='Mage';
-		this.obj.style.backgroundColor='red';
-		this.name=name;
-		this.steps=0;
-		this.stats = {
-			hp: 100,
-			hpMax: 100,
-			hpMin: 0,
-			mp: 100,
-			mpMax: 100,
-		}
-		this.maxSteps=1;
-		this.live=true;
-		this.canCast=true;
-		this.buffs=[];
-		this.magic=elems.magic;
-		nowPlayerIndex=elems.units.gamers.length;
-		elems.units.gamers.push(this);
-	}
-
-	addHp(hp) {
-		if(this.live) {
-			Vue.set(this.stats,'hp',this.stats.hp+hp);
-			updateVue();
-			//this.stats.hp+=hp;
-			if(this.stats.hp>this.stats.hpMax) this.stats.hp=this.stats.hpMax;
-			if(this.stats.hp<=this.stats.hpMin) {
-				Vue.set(this.stats,'hp',0);
-				updateVue();
-				//this.hp=0;
-				this.live=false;
-				console.log('Цель мертва');
-				this.canMove=false;
-			}
-		} else {
-			console.log('Цель мертва');
-		}
-	}
-
-	move({x:x=0,y:y=0}) {
-		if(this.canMove) {
-			if (x>1) x=1;
-			if (y>1) y=1;
-			if (x<-1) x=-1;
-			if (y<-1) y=-1;
-			const coords = this.Coords;
-			if((x==0&&y==0)||(checkBlock({x:coords.x+x-0,y:coords.y+y-0}))) {
-				this.Coords={x:coords.x+x-0,y:coords.y+y-0};
-				this.steps++;
-				checkStep();
-			} else console.log('занято');
-		} else {
-			console.log('Цель обездвижена');
-		}
-	}
-
-	addMp(mp) {
-		if(this.live) {
-			//this.stats.mp+=mp;
-			Vue.set(this.stats,'mp',this.stats.mp+mp);
-			updateVue();
-			if(this.stats.mp>this.stats.mpMax) this.stats.mp=this.stats.mpMax;
-			if(this.stats.mp<=0) {
-				updateVue();
-				Vue.set(this.stats,'mp',0);
-			}
-		} else {
-			console.log('Цель мертва');
-		}
-	}
-
-	preCast(id) {//при выборе заклинания выбираются кол-во целей итд
-
-	}
-
-	cast(id,target) {//сам каст
-		elems.spells[id].cast(this,target);
-	}
-
-	addBuff(buff) {
-		var state = false;
-		for(var i = 0;i<this.buffs.length;i++) {
-			if(this.buffs[i].name==buff.name) {
-				this.buffs[i].nowTick=0;
-				state = true;
-				break;
-			}
-		}
-		if(!state) this.buffs.push(buff);
-	}
-
-	delBuff(buff) {
-		for(var i = 0;i<this.buffs.length;i++) {
-			if(this.buffs[i].name==buff.name) {
-				this.buffs.splice(i,1);
-			}
-		}
-	}
-
-}
-
-class Wall extends unitMaker {
-	constructor(x,y) {
-		super(x,y);
-		this.obj.style.backgroundColor='black';
-		elems.walls.push(this);
-	}
-}
-
-class Spell {
-	constructor(name,targets,manacost,callback,input=false) {
-		this.id=lastSpellId++;
-		this.name=name;
-		this.targets=targets;
-		this.manacost=manacost;
-		this.input=input;
-		this.cast=function(me, target=nowSemiTarget) {
-			if(me.stats.mp>=manacost) {
-				console.log(this.manacost);
-				if(targets=='unit') {
-					target = getUnitByCoords(target);
-					if(!target) {
-						console.log('Цель не выбрана');
-						return;
-					}
-				}
-				const inputs=getId('spellInput').value;
-				callback.call(this, me, target);
-				me.addMp(-manacost);
-			}
-			else console.log('Недостаточно маны');
-		}
-		elems.spells.push(this);
-	}
-}
-
-class Buff {
-	constructor(ticks, delaySteps, name, state, callback) {//если есть delay то первая delaySteps шагов ничего не делаеют а потом эффект
-		this.id=lastBuffId++;
-		this.name=name;
-		this.nowTick=0;
-		this.ticks=ticks;
-		this.target=undefined;
-		this.delaySteps=delaySteps;
-		this.nowStep=0;
-		this.callback=callback;
-		this.state=(state)?'Buff':'Debuff';
-		elems.buffs.push(this);
-	}
-	cast(target) {
-		if(this.nowTick%(this.delaySteps+1)===this.delaySteps) {
-			this.callback(target);
-			this.nowStep++;
-		}
-		this.nowTick++;
-	}
-}
 
 //Свойства
 
-var maxX;
-var maxY;
-var elems = {
-	units: {
-		gamers: [],
-		others: [],
-	},//существа
-	spells: [],//всевозможные заклинания
-	walls: [],//стены
-	activeMagic: [],//пущеные чары
-	buffs: [],//баффы
-	debuffs: [],//дебаффы
-	bottles: [],//склянки/хилки возможные
-	activeBottles: [],//склянки/хилки на поле
+const HEIGHTBLOCK = 10;
+const WIDTHBLOCK = 10;
 
+var games = [];
+
+var Game1 = new Game(80,WIDTHBLOCK,40,HEIGHTBLOCK);
+
+var elems = {
+	spells: [],//всевозможные заклинания
+	buffs: [],//баффы
+	bottles: [],//склянки/хилки возможные
 };//массив всех элементов
 var lastid = 0;//счетчик id, число указывает на следующий id
 var lastSpellId = 0;
 var lastBuffId = 0;
-var nowPlayerIndex=0;
-var nowSemiTarget;
-const HEIGHTBLOCK = 10;
-const WIDTHBLOCK = 10;
-
 
 //тестовое заклинание
 
-const teleport = new Spell('Teleport','all',40,function(me,target,inputs){
-	me.Coords=target;
-	console.log('magic');
-	//nowSemiTarget=null;
-},false);
-
-const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
-	target.addHp(-30);
-	me.addHp(30);
-	//nowSemiTarget=null;
-});
-
 //баффы
 
-class lowDmg extends Buff {
-	constructor() {
-		super(3,0,'dmg',false,function(target){
-			target.addHp(-10);
-		});
-	}
-}
 
 //Действия
 
-renderPole(80,40);
+Game1.level.renderPole();
 
 //vue
 
@@ -434,14 +90,15 @@ renderPole(80,40);
 const vm = new Vue({
 	el: '#hid',
 	data: {
-		nowMainSelect: null,//выбранный в данный момент юнит
+		game: Game1,
+		nowMainSelect: Game1.nowMainSelect,//выбранный в данный момент юнит
 		spells: elems.spells,
 		step: 0,
 		update: false,//костыль
 		spellId: '',
 	},
 	methods: {
-
+		click: function(){alert()}
 	},
 	computed: {
 
@@ -493,20 +150,3 @@ Vue.component('healthbar', {
 		}
 	}
 });
-
-
-//Дзадания
-
-
-async function m(N) {//отступ между границами
-	var dirs = [{x:-1},{y:-1},{x:1},{y:1}];
-	var m = 1;
-	for(var i = 0;i<2*N-1;i++) {
-		for(var j = 0;j<N-m;j++) {
-			vm.nowMainSelect.move(dirs[i%4]);
-			console.log(dirs[i%4]);
-			await sleep(500);
-		}
-		if(i%4==2||(i%2==0&&i!=0)) m++;
-	}
-}
