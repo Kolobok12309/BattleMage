@@ -12,7 +12,7 @@
 	<div id='pole'></div>
 	<br>
 	<button class='button-primary' onclick='new Mage("team","name",maxX-1,maxY-1);getId("hid").style.display="block";'>Создать блок</button>
-	<button onclick='new Wall(maxX-1,maxY);getId("hid").style.display="block";'>Создать стену</button>
+	<button onclick='new Wall(maxX-1,maxY-1);getId("hid").style.display="block";'>Создать стену</button>
 	<button onclick='if(vm.nowMainSelect) m(5);else alert("создайте блок");'>запустить мага по траектории с параметром 5</button>
 	<button onclick='genWalls()'>Создать границы</button>
 	<div id='hid' style='display: none'>
@@ -22,17 +22,20 @@
 			<button onclick='vm.nowMainSelect.move({x:1,y:1})'>/-</button>
 		</div>
 		<br>
+		<br>
 		<div class='row'>
 			<button onclick='vm.nowMainSelect.move({x:-1})'><-</button>
 			<button onclick='vm.nowMainSelect.move({})'>SKIP</button>
 			<button onclick='vm.nowMainSelect.move({x:1})'>-></button>
 		</div>
 		<br>
+		<br>
 		<div class='row'>
 			<button onclick='vm.nowMainSelect.move({x:-1,y:-1})'>/_</button>
 			<button onclick='vm.nowMainSelect.move({y:-1})'>\/</button>
 			<button onclick='vm.nowMainSelect.move({x:1,y:-1})'>_\</button>
 		</div>
+		<br>
 		<br>
 		<div id='cast'>
 			<select v-model='spellId'>
@@ -43,7 +46,7 @@
 		</div>
 		<br>
 		<button onclick='vm.nowMainSelect.remove()'>DELETE</button>
-		<div v-if='nowMainSelect'>
+		<div v-if='nowMainSelect&&nowMainSelect.stats'>
 			<input v-model='update' type="hidden">
 			<healthbar :width='"100px"' :height='"30px"' :hp='nowMainSelect.stats.hp' :hp-max='nowMainSelect.stats.hpMax'></healthbar>
 			<manabar :width='"100px"' :height='"30px"' :mp='nowMainSelect.stats.mp' :mp-max='nowMainSelect.stats.mpMax'></manabar>

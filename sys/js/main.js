@@ -41,14 +41,14 @@ function sleep(ms) {//Пример await sleep(500); в async function
 }
 function genWalls() {
 	for(var i = 0;i<maxX;i++) {
-		new unitMaker('w',i,0);
+		new Wall(i,0);
 	}
 	for(var i = 1;i<maxY-1;i++) {
-		new unitMaker('w',0,i);
-		new unitMaker('w',maxX-1,i);
+		new Wall(0,i);
+		new Wall(maxX-1,i);
 	}
 	for(var i = 0;i<maxX;i++) {
-		new unitMaker('w',i,maxY-1);
+		new Wall(i,maxY-1);
 	}
 }
 function move({x:x=0,y:y=0}) {
@@ -316,10 +316,12 @@ class Mage extends unitMaker {
 
 }
 
-function Wall(x,y) {
-	unitMaker.call(this,x,y);
-	this.obj.style.backgroundColor='black';
-	elems.walls.push(this);
+class Wall extends unitMaker {
+	constructor(x,y) {
+		super(x,y);
+		this.obj.style.backgroundColor='black';
+		elems.walls.push(this);
+	}
 }
 
 class Spell {
