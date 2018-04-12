@@ -58,7 +58,8 @@ function move({x:x=0,y:y=0}) {
 		if (x<-1) x=-1;
 		if (y<-1) y=-1;
 		const coords = this.getCoords();
-		if((x==0&&y==0)||this.setCoords({x:coords.x+x-0,y:coords.y+y-0})) {
+		if((x==0&&y==0)||(checkBlock({x:coords.x+x-0,y:coords.y+y-0}))) {
+			this.Coords({x:coords.x+x-0,y:coords.y+y-0})
 			this.steps++;
 			checkStep();
 		} else console.log('занято');
@@ -115,7 +116,12 @@ function nextPlayer() {
 		vm.step++;
 		elems.units.gamers.forEach(function(obj){
 			obj.buffs.forEach(function(buff) {
-				elems.buffs[buff].cast(obj);
+				if(buff.nowStep<buff.ticks) {
+					buff.cast(obj);
+					if(buff.nowStep===buff.ticks) obj.delBuff(buff);
+				} else {
+					obj.delBuff(buff);
+				}
 			});
 		});
 		//сюда функцию на баффы и дебаффы
@@ -198,12 +204,10 @@ class unitMaker {
 	}
 
 	set Coords({x:xx,y:yy}) {
-		if(checkBlock({x:xx,y:yy})) {
-			this.obj.style.left=`${xx*WIDTHBLOCK}px`;
-			this.obj.style.top=`${(maxY-yy-1)*HEIGHTBLOCK}px`;
-			this.x=xx-0;
-			this.y=yy-0;
-		};
+		this.obj.style.left=`${xx*WIDTHBLOCK}px`;
+		this.obj.style.top=`${(maxY-yy-1)*HEIGHTBLOCK}px`;
+		this.x=xx-0;
+		this.y=yy-0;
 	}
 }
 
@@ -224,6 +228,7 @@ class Mage extends unitMaker {
 		}
 		this.maxSteps=1;
 		this.live=true;
+		this.canCast=true;
 		this.buffs=[];
 		this.magic=elems.magic;
 		nowPlayerIndex=elems.units.gamers.length;
@@ -250,23 +255,19 @@ class Mage extends unitMaker {
 	}
 
 	move({x:x=0,y:y=0}) {
-		if(this.live) {
-			if(this.canMove) {
-				if (x>1) x=1;
-				if (y>1) y=1;
-				if (x<-1) x=-1;
-				if (y<-1) y=-1;
-				const coords = this.Coords;
+		if(this.canMove) {
+			if (x>1) x=1;
+			if (y>1) y=1;
+			if (x<-1) x=-1;
+			if (y<-1) y=-1;
+			const coords = this.Coords;
+			if((x==0&&y==0)||(checkBlock({x:coords.x+x-0,y:coords.y+y-0}))) {
 				this.Coords={x:coords.x+x-0,y:coords.y+y-0};
-				if((x==0&&y==0)||(coords.x!=this.Coords.x&&coords.y!=this.Coords.y)) {
-					this.steps++;
-					checkStep();
-				} else console.log('занято');
-			} else {
-				console.log('Цель обездвижена');
-			}
+				this.steps++;
+				checkStep();
+			} else console.log('занято');
 		} else {
-			console.log('Цель мертва');
+			console.log('Цель обездвижена');
 		}
 	}
 
@@ -291,6 +292,26 @@ class Mage extends unitMaker {
 
 	cast(id,target) {//сам каст
 		elems.spells[id].cast(this,target);
+	}
+
+	addBuff(buff) {
+		var state = false;
+		for(var i = 0;i<this.buffs.length;i++) {
+			if(this.buffs[i].name==buff.name) {
+				this.buffs[i].nowTick=0;
+				state = true;
+				break;
+			}
+		}
+		if(!state) this.buffs.push(buff);
+	}
+
+	delBuff(buff) {
+		for(var i = 0;i<this.buffs.length;i++) {
+			if(this.buffs[i].name==buff.name) {
+				this.buffs.splice(i,1);
+			}
+		}
 	}
 
 }
@@ -329,17 +350,24 @@ class Spell {
 }
 
 class Buff {
-	constructor(times, delaySteps, name, state, callback) {
+	constructor(ticks, delaySteps, name, state, callback) {//если есть delay то первая delaySteps шагов ничего не делаеют а потом эффект
 		this.id=lastBuffId++;
 		this.name=name;
-		this.times=times;
+		this.nowTick=0;
+		this.ticks=ticks;
+		this.target=undefined;
 		this.delaySteps=delaySteps;
 		this.nowStep=0;
+		this.callback=callback;
 		this.state=(state)?'Buff':'Debuff';
-		this.cast=function(target) {
-			callback(target);
-		}
 		elems.buffs.push(this);
+	}
+	cast(target) {
+		if(this.nowTick%(this.delaySteps+1)===this.delaySteps) {
+			this.callback(target);
+			this.nowStep++;
+		}
+		this.nowTick++;
 	}
 }
 
@@ -386,9 +414,13 @@ const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
 
 //баффы
 
-const dmg = new Buff(3, 0, 'RegDmg', 0, function(unit) {
-	unit.addHp(-10);
-});
+class lowDmg extends Buff {
+	constructor() {
+		super(3,0,'dmg',false,function(target){
+			target.addHp(-10);
+		});
+	}
+}
 
 //Действия
 
