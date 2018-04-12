@@ -261,7 +261,6 @@ class HTMLLevel extends Level {
 		super(x,y,gameId);
 		this.WIDTHBLOCK=WIDTH;
 		this.HEIGHTBLOCK=HEIGHT;
-		this.cursorCoords=null;
 	}
 
 	renderPole() {
@@ -292,13 +291,27 @@ class HTMLLevel extends Level {
 			if(e.clientX+self.WIDTHBLOCK/2<self.maxX*self.WIDTHBLOCK&&e.clientY+self.HEIGHTBLOCK/2<self.maxY*self.HEIGHTBLOCK&&e.clientX-self.WIDTHBLOCK/2>0&&e.clientY-self.HEIGHTBLOCK/2>0) {
 				var x = Math.ceil(e.clientX/self.WIDTHBLOCK)-1;
 				var y = Math.ceil(e.clientY/self.HEIGHTBLOCK)-1;
-				cursor.Coords={x:x,y:y};
+				cursor.Coords={x:x,y:self.maxY-y-1};
 				cursor.style.left=`${x*self.WIDTHBLOCK}px`;
 				cursor.style.top=`${y*self.HEIGHTBLOCK}px`;
 			}
 		});
 
 		getId('cursor').addEventListener('click',function(){
+			//console.log(cursor.Coords.x+':'+cursor.Coords.y);
+			var target;
+			if(games[self.gameId].nowMainTarget) {
+				target = getId('MainTarget');
+			} else {
+				target = document.createElement('div');
+				target.id='MainTarget';
+				target.className='semiTarget';
+				target.style.width=self.WIDTHBLOCK+'px';
+				target.style.height=self.HEIGHTBLOCK+'px';
+				pole.appendChild(target);
+			}
+			target.style.left=cursor.style.left;
+			target.style.top=cursor.style.top;
 			games[self.gameId].nowMainTarget=cursor.Coords;
 		});
 	}
@@ -310,7 +323,7 @@ class Game {
 		this.level=new HTMLLevel(x,WIDTH,y,HEIGHT,this.gameId);
 		this.nowMainSelect=null;
 		this.nowMainTarget=null;
-		this.nowSemiTarget=null;
+		//this.nowSemiTarget=null;
 		this.lastGamerId = 0;
 		games.push(this);
 	}
