@@ -40,16 +40,20 @@ function sleep(ms) {//Пример await sleep(500); в async function
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 function genWalls() {
-	for(var i = 0;i<maxX;i++) {
-		new Wall(i,0);
+	for(var i = 0;i<Game1.level.maxX;i++) {
+		Game1.addWall(i,0);
 	}
-	for(var i = 1;i<maxY-1;i++) {
-		new Wall(0,i);
-		new Wall(maxX-1,i);
+	for(var i = 1;i<Game1.level.maxY-1;i++) {
+		Game1.addWall(0,i);
+		Game1.addWall(Game1.level.maxX-1,i);
 	}
-	for(var i = 0;i<maxX;i++) {
-		new Wall(i,maxY-1);
+	for(var i = 0;i<Game1.level.maxX;i++) {
+		Game1.addWall(i,Game1.level.maxY-1);
 	}
+	setTimeout(function(){
+		Game1.level.elems.walls.push('');
+		Game1.level.elems.walls.pop();
+	},5);
 }
 function rand(min,max) {//включая оба предела
 	return Math.floor(min+(max-min+1)*Math.random());
@@ -81,7 +85,7 @@ Game1.level.renderPole();
 
 
 const vm = new Vue({
-	el: '#hid',
+	el: '#control',
 	data: {
 		game: Game1,
 		nowMainSelect: Game1.nowMainSelect,//выбранный в данный момент юнит
@@ -98,7 +102,7 @@ const vm = new Vue({
 });
 
 function updateVue() {
-	Vue.set(vm,'update',!vm.update);//Лютый костыль
+	//Vue.set(vm,'update',!vm.update);//Лютый костыль
 }
 
 Vue.component('manabar', {
@@ -155,3 +159,30 @@ const vampire = new Spell('LifeSteal','unit',30,function(me,target) {
 	me.addHp(30);
 	//nowSemiTarget=null;
 },0);
+
+function cloneObj(obj) {
+	const obj1 = {};
+	for(var key in obj) {
+		if(obj[key].forEach) {
+			obj1[key]=[];
+			obj[key].forEach(function(objj){obj1[key].push(objj)});
+		} else if(typeof(obj[key])=='object') obj1[key]=cloneObj(obj[key]);
+		else obj1[key]=obj[key];
+	}
+	return obj1;
+}
+
+// function cloneArray(arr) {
+// 	const arr1 = [];
+// 	arr.forEach(function(obj){
+// 		if(typeof(obj)=='object') {
+// 			var obj1 = {};
+// 			for(var key in obj) {
+
+// 				obj1[key]=obj[key];
+// 			}
+// 		}
+// 		arr1.push(obj);
+// 	});
+// 	return arr1;
+// }

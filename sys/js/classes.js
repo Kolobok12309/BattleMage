@@ -20,8 +20,6 @@ class unitMaker {
 		// block.addEventListener('click',()=>{
 		// 	if(vm.nowMainSelect&&self.id!=vm.nowMainSelect.id) self.semiSelectThis();
 		// });
-
-		this.Coords=new xy(x,y);
 	}
 
 	semiSelectThis() {
@@ -31,21 +29,20 @@ class unitMaker {
 	}
 
 	remove() {
-		this.obj.remove();
-		for(var i = 0;i<elems.units.length;i++) {
-			if(elems.units.gamers[i].id==this.id) {
-				elems.units.gamers.splice(i,1);
+		for(var i = 0;i<games[this.gameId].level.elems.units.gamers.length;i++) {
+			if(games[this.gameId].level.elems.units.gamers[i]==this) {
+				games[this.gameId].level.elems.units.gamers.splice(i,1);
 				break;
 			}
 		}
-		for(var i = 0;i<elems.units.length;i++) {
-			if(elems.units.others[i].id==this.id) {
-				elems.units.others.splice(i,1);
+		for(var i = 0;i<games[this.gameId].level.elems.walls.length;i++) {
+			if(games[this.gameId].level.elems.walls[i]==this) {
+				games[this.gameId].level.elems.walls.splice(i,1);
 				break;
 			}
 		}
-		vm.nowMainSelect=undefined;
-		getId('hid').style.display='none';
+		games[this.gameId].nowMainSelect=null;
+		games[this.gameId].nowMainTarget=null;
 		delete this;
 	}
 
@@ -162,10 +159,8 @@ class Mage extends unitMaker {
 }
 
 class Wall extends unitMaker {
-	constructor(x,y,game) {
-		super(x,y);
-		this.obj.style.backgroundColor='black';
-		game.level.elems.walls.push(this);
+	constructor(x,y,gameId) {
+		super(x,y,gameId);
 	}
 }
 
@@ -309,7 +304,7 @@ class HTMLLevel extends Level {
 		cursor.addEventListener('click',function(){
 			//console.log(cursor.Coords.x+':'+cursor.Coords.y);
 			var target;
-			if(games[self.gameId].nowMainTarget) {
+			if(games[self.gameId].nowMainTarget||getId('MainTarget')) {
 				target = getId('MainTarget');
 			} else {
 				target = document.createElement('div');
@@ -367,8 +362,7 @@ class Game {
 	}
 
 	addWall(x,y) {
-		const newWall = new Wall(x,y,this.gameId);
-		this.level.elems.walls.push(newWall);
+		this.level.elems.walls.push(new Wall(x,y,this.gameId));
 	}
 
 
