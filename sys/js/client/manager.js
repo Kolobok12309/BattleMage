@@ -13,7 +13,7 @@ class GameClient {
 		this.step=0;
 	}
 
-	takeMage(resp) {
+	takeMage(resp) {//JSON
 		console.log(resp);
 		resp = JSON.parse(resp);
 		const mage = new MageClient(resp.team,resp.name,resp.x,resp.y,resp.stats,resp.buffs);
@@ -33,14 +33,20 @@ class GameClient {
 		//this.l=new HTMLLevel(this.level,HEIGHTBLOCK,WIDTHBLOCK);
 	}
 
-	move(xy) {
+	move(xy) {//JSON
 		//this.nowMainSelect.move(xy);
-		GameServer1.doAction(JSON.stringify({
+		sendAjax(JSON.stringify({
 			action: 'move',
 			id: this.id,
 			args: xy,
 			nowxy: this.nowMainSelect.Coords,
-		}));
+		}),'http://localhost:81');
+		// GameServer1.doAction(JSON.stringify({
+		// 	action: 'move',
+		// 	id: this.id,
+		// 	args: xy,
+		// 	nowxy: this.nowMainSelect.Coords,
+		// }));
 		this.step++;
 	}
 }

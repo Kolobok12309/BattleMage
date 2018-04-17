@@ -327,12 +327,11 @@ class Level {
 	toJSON() {
 		var string = '';
 		string = JSON.stringify({
-			elems: {
-				units: {
-					gamers: this.elems.units.gamers,
-					others: this.elems.units.others,
-				}
-			}
+			elems: this.elems,
+			maxX: this.maxX,
+			maxY: this.maxY,
+			step: this.step,
+			gameId: this.gameId,
 		});
 	}
 }

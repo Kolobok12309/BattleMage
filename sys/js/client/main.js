@@ -1,6 +1,17 @@
 function getId(id) {
 	return document.getElementById(id);
 }
+function sendAjax(text='',url='/',method='POST',callback=function(xhr){console.log(xhr.responseText);}) {
+	var xhr = new XMLHttpRequest();
+	xhr.open(method,url,true);
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState == 4&&xhr.status==200) {
+			callback(xhr);
+		}
+	}
+	xhr.send(text);
+}
 function sleep(ms) {//Пример await sleep(500); в async function
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
