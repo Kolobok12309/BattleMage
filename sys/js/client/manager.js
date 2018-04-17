@@ -1,7 +1,8 @@
+var idClients = 0;
 class GameClient {
 	constructor(gameId,level,magic,id) {
 		this.gameId=gameId;
-		this.id=id;
+		this.id=idClients++;
 		this.nowMainSelect=null;
 		this.level= level.clone();
 		this.magic= {
@@ -13,10 +14,11 @@ class GameClient {
 	}
 
 	takeMage(resp) {
+		console.log(resp);
 		resp = JSON.parse(resp);
 		const mage = new MageClient(resp.team,resp.name,resp.x,resp.y,resp.stats,resp.buffs);
 		this.level.elems.units.gamers.push(mage);
-		this.nowMainSelect=mage;
+		this.nowMainSelect=this.level.elems.units.gamers[this.level.elems.units.gamers.length-1];
 	}
 
 	takeWall(wall) {
@@ -35,7 +37,7 @@ class GameClient {
 		//this.nowMainSelect.move(xy);
 		GameServer1.doAction(JSON.stringify({
 			action: 'move',
-			id: 0,
+			id: this.id,
 			args: xy,
 			nowxy: this.nowMainSelect.Coords,
 		}));

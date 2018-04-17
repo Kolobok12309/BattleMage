@@ -94,7 +94,7 @@ class Mage extends unitMaker {
 		},cloneArray(this.buffs));
 	}
 
-	get toJSON() {
+	toJSON() {
 		return JSON.stringify({
 			team: this.team,
 			name: this.name,
@@ -186,7 +186,7 @@ class Wall extends unitMaker {
 		return new Wall(this.x,this.y,this.gameId);
 	}
 
-	get toJSON() {
+	toJSON() {
 		return JSON.stringify({
 			x: x,
 			y: y,
@@ -246,6 +246,16 @@ class Buff {
 			this.nowStep++;
 		}
 		this.nowTick++;
+	}
+
+	toJSON() {
+		return JSON.stringify({
+			name: this.name,
+			stats: {
+				nowTick: this.nowTick,
+				nowStep: this.nowStep,
+			}
+		});
 	}
 }
 
@@ -314,8 +324,16 @@ class Level {
 		}
 	}
 
-	get toJSON() {
-
+	toJSON() {
+		var string = '';
+		string = JSON.stringify({
+			elems: {
+				units: {
+					gamers: this.elems.units.gamers,
+					others: this.elems.units.others,
+				}
+			}
+		});
 	}
 }
 
@@ -339,8 +357,7 @@ class GameServer {
 	}
 
 	getClient() {
-		const id = 0;//id юзера
-		const newCl = new GameClient(this.gameId,this.level,this.magic,id);
+		const newCl = new GameClient(this.gameId,this.level,this.magic,this.gameClients.length);
 		this.gameClients.push(newCl);
 		return newCl;
 	}
@@ -367,6 +384,7 @@ class GameServer {
 				else {
 					obj.takeLevel(self.level);
 					obj.nowMainSelect.move(req.args);
+					log(false,'ошибка с координатами')
 				}
 			});
 			break;
@@ -391,7 +409,7 @@ class GameServer {
 		this.level.elems.units.gamers.push(newMage);
 		//GameClient1.nowMainSelect=newMage.clone();//кинуть на клиент
 		this.gameClients.forEach(function(obj){
-			obj.takeMage(newMage.toJSON);
+			obj.takeMage(JSON.stringify(newMage));
 		});
 	}
 
