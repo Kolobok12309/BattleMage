@@ -25,20 +25,6 @@ class unitMaker {
 		this.gameId=gameId;
 		this.x=x;
 		this.y=y;
-		this.canMove=true;
-		// block.addEventListener('dblclick',()=>{
-		// 	self.selectThis();
-		// });
-
-		// block.addEventListener('click',()=>{
-		// 	if(vm.nowMainSelect&&self.id!=vm.nowMainSelect.id) self.semiSelectThis();
-		// });
-	}
-
-	semiSelectThis() {
-		if(nowSemiTarget&&getUnitByCoords(nowSemiTarget)) getUnitByCoords(nowSemiTarget).obj.classList.remove('semiTarget');
-		nowSemiTarget=this.Coords;
-		this.obj.classList.add('semiTarget');
 	}
 
 	remove() {
@@ -54,8 +40,6 @@ class unitMaker {
 				break;
 			}
 		}
-		games[this.gameId].nowMainSelect=null;
-		games[this.gameId].nowMainTarget=null;
 		delete this;
 	}
 
@@ -85,6 +69,7 @@ class Mage extends unitMaker {
 				maxSteps: 1,
 				live: true,
 				canCast: true,
+				canMove: true,
 				steps: 0,
 			};
 		} else {
@@ -94,18 +79,41 @@ class Mage extends unitMaker {
 	}
 
 	clone() {
-		return newMage(this.team,this.name,this.x,this.y,this.gameId,this.stats,cloneArray(this.buffs));
+		return new Mage(this.team,this.name,this.x,this.y,this.gameId,{
+			hp: this.stats.hp,
+			hpMax: this.stats.hpMax,
+			hpMin: this.stats.hpMin,
+			mp: this.stats.mp,
+			mpMax: this.stats.mpMax,
+			maxSteps: this.stats.maxSteps,
+			live: this.stats.live,
+			canCast: this.stats.canCast,
+			canMove: this.stats.canMove,
+			steps: this.stats.steps,
+
+		},cloneArray(this.buffs));
+	}
+
+	get toJSON() {
+		return JSON.stringify({
+			team: this.team,
+			name: this.name,
+			stats: this.stats,
+			x: this.x,
+			y: this.y,
+			buffs: this.buffs,
+		});
 	}
 
 	addHp(hp) {
-		if(this.live) {
+		if(this.stats.live) {
 			this.stats.hp+=hp;
 			if(this.stats.hp>this.stats.hpMax) this.stats.hp=this.stats.hpMax;
 			if(this.stats.hp<=this.stats.hpMin) {
-				this.hp=0;
-				this.live=false;
+				this.stats.hp=0;
+				this.stats.live=false;
 				console.log('Цель мертва');
-				this.canMove=false;
+				this.stats.canMove=false;
 			}
 		} else {
 			console.log('Цель мертва');
@@ -113,17 +121,17 @@ class Mage extends unitMaker {
 	}
 
 	move({x:x=0,y:y=0}) {
-		if(this.canMove) {
+		if(this.stats.canMove) {
 			if (x>1) x=1;
 			if (y>1) y=1;
 			if (x<-1) x=-1;
 			if (y<-1) y=-1;
 			const coords = this.Coords;
 			const elem = games[this.gameId].level.getElemByCoords({x:coords.x+x-0,y:coords.y+y-0});
-			if((x==0&&y==0)||(!elem)||(elem&&elem.moveble)) {
+			if((x==0&&y==0)||(elem===false)||(elem&&elem.moveble)) {
 				this.Coords=new xy((coords.x+x-0),(coords.y+y-0));
-				this.steps++;
-				games[this.gameId].checkStep();
+				this.stats.steps++;
+				//games[this.gameId].checkStep();
 			} else console.log('занято');
 		} else {
 			console.log('Цель обездвижена');
@@ -131,12 +139,12 @@ class Mage extends unitMaker {
 	}
 
 	addMp(mp) {
-		if(this.live) {
+		if(this.stats.live) {
 			//this.stats.mp+=mp;
 			Vue.set(this.stats,'mp',this.stats.mp+mp);
 			if(this.stats.mp>this.stats.mpMax) this.stats.mp=this.stats.mpMax;
 			if(this.stats.mp<=0) {
-				Vue.set(this.stats,'mp',0);
+				this.stats.mp=0;
 			}
 		} else {
 			console.log('Цель мертва');
@@ -176,6 +184,13 @@ class Wall extends unitMaker {
 
 	clone() {
 		return new Wall(this.x,this.y,this.gameId);
+	}
+
+	get toJSON() {
+		return JSON.stringify({
+			x: x,
+			y: y,
+		});
 	}
 }
 
@@ -235,9 +250,10 @@ class Buff {
 }
 
 class Level {
-	constructor(x,y,gameId,elems) {
+	constructor(x,y,gameId,elems,step) {
 		this.maxX=x;
 		this.maxY=y;
+		this.step=step;
 		this.gameId=gameId;
 		if(elems===undefined) {
 			this.elems= {
@@ -283,116 +299,30 @@ class Level {
 			walls: cloneArray(this.elems.walls),
 			activeMagic: cloneArray(this.elems.activeMagic),
 			activeBottles: cloneArray(this.elems.activeBottles),
-		});
-	}
-}
-
-class HTMLLevel {//визуализатор
-	constructor(level,WIDTH,HEIGHT) {
-		this.level=level.clone();
-		this.WIDTHBLOCK=WIDTH;
-		this.HEIGHTBLOCK=HEIGHT;
+		},this.step);
 	}
 
-	renderPole() {
-		const pole = document.createElement('div');
-		pole.style.width=this.level.maxX*this.WIDTHBLOCK+'px';
-		pole.style.height=this.level.maxY*this.HEIGHTBLOCK+'px';
-		pole.style.backgroundColor='lightgray';
-		getId('pole').appendChild(pole);
-
-		const cursor = document.createElement('div');
-		cursor.className='semiTarget';
-		cursor.id='cursor';
-		cursor.style.width=this.WIDTHBLOCK+'px';
-		cursor.style.height=this.HEIGHTBLOCK+'px';
-		pole.appendChild(cursor);
-
-		pole.addEventListener('mouseover',function(){
-			cursor.style.display='block';
-		});
-
-		pole.addEventListener('mouseout',function(){
-			cursor.style.display='none';
-
-		});
-
-		var self = this;
-		pole.addEventListener('mousemove',function(e){
-			//console.log(e);
-			if(e.clientX+self.WIDTHBLOCK/2<self.level.maxX*self.WIDTHBLOCK&&e.clientY+self.HEIGHTBLOCK/2<self.level.maxY*self.HEIGHTBLOCK&&e.clientX-self.WIDTHBLOCK/2>0&&e.clientY-self.HEIGHTBLOCK/2>0) {
-				var x = Math.ceil(e.clientX/self.WIDTHBLOCK)-1;
-				var y = Math.ceil(e.clientY/self.HEIGHTBLOCK)-1;
-				cursor.Coords={x:x,y:self.level.maxY-y-1};
-				cursor.style.left=`${x*self.WIDTHBLOCK}px`;
-				cursor.style.top=`${y*self.HEIGHTBLOCK}px`;
-			}
-		});
-
-		cursor.addEventListener('click',function(){
-			//console.log(cursor.Coords.x+':'+cursor.Coords.y);
-			var target;
-			if(GameClient1.nowMainTarget||getId('MainTarget')) {
-				target = getId('MainTarget');
-			} else {
-				target = document.createElement('div');
-				target.id='MainTarget';
-				target.className='semiTarget';
-				target.style.width=self.WIDTHBLOCK+'px';
-				target.style.height=self.HEIGHTBLOCK+'px';
-				pole.appendChild(target);
-			}
-			target.style.left=this.style.left;
-			target.style.top=this.style.top;
-			GameClient1.nowMainTarget=this.Coords;
-		});
-
-		cursor.addEventListener('dblclick',function(){
-			const target = GameClient1.l.level.getElemByCoords(cursor.Coords);
-			if(target) {
-				GameClient1.nowMainSelect=target;
-			}
-		});
-	}
-}
-
-class GameClient {
-	constructor(gameId,level,magic,id) {
-		this.gameId=gameId;
-		this.id=id;
-		this.nowMainSelect=null;
-		this.level= level.clone();
-		this.magic= {
-			spells: cloneArray(magic.spells),
-			buffs: cloneArray(magic.buffs),
-			bottles: cloneArray(magic.bottles),
+	cloneElems() {
+		return {
+			units: {
+				gamers: cloneArray(this.elems.units.gamers),
+				others: cloneArray(this.elems.units.others),
+			},
+			walls: cloneArray(this.elems.walls),
+			activeMagic: cloneArray(this.elems.activeMagic),
+			activeBottles: cloneArray(this.elems.activeBottles),
 		}
 	}
 
-	takeMage(mage) {
-		this.l.level.elems.units.gamers.push(mage);
-		this.nowMainSelect=mage;
-	}
+	get toJSON() {
 
-	takeWall(wall) {
-		this.l.level.elems.walls.push(wall);
-		console.log('Добавлена стена');
-	}
-
-	move(xy) {
-		//this.nowMainSelect.move(xy);
-		GameServer1.doAction(JSON.stringify({
-			action: 'move',
-			id: 0,
-			args: xy,
-		}));
 	}
 }
 
 class GameServer {
 	constructor(x,y) {
 		this.gameId=games.length;
-		this.level=new Level(x,y,this.gameId);
+		this.level=new Level(x,y,this.gameId,undefined,0);
 		this.nowMainSelect=null;
 		this.nowMainTarget=null;
 		this.gameClients=[];
@@ -401,8 +331,10 @@ class GameServer {
 			buffs: [],//баффы
 			bottles: [],//склянки/хилки возможные
 		}
+		this.step=0;
 		//this.nowSemiTarget=null;
 		this.lastGamerId = 0;
+		this.history=[];
 		games.push(this);
 	}
 
@@ -413,6 +345,10 @@ class GameServer {
 		return newCl;
 	}
 
+	backup() {
+		this.history.push(this.level.clone());
+	}
+
 	doAction(action) {
 		var req = JSON.parse(action);
 		// req = {
@@ -420,11 +356,22 @@ class GameServer {
 		// 	id: 0,
 		// 	args: {x:1,y:1},
 		// }
+		const self = this;
 		switch(req.action) {
 			case 'move': //Сюда вписать функцию проверки может ли быть данный ход
+			this.backup();
+			const oldxy = this.level.elems.units.gamers[req.id].Coords;
 			this.level.elems.units.gamers[req.id].move(req.args);
+			this.gameClients.forEach(function(obj){
+				if(obj.nowMainSelect.x==oldxy.x&&obj.nowMainSelect.y==oldxy.y) obj.nowMainSelect.move(req.args);
+				else {
+					obj.takeLevel(self.level);
+					obj.nowMainSelect.move(req.args);
+				}
+			});
 			break;
 		}
+		this.step++;
 		console.log(action);
 	}
 
@@ -442,9 +389,9 @@ class GameServer {
 	addMage(team,name,x,y) {
 		const newMage = new Mage(team,name,x,y,this.gameId);
 		this.level.elems.units.gamers.push(newMage);
-		GameClient1.nowMainSelect=newMage;//кинуть на клиент
+		//GameClient1.nowMainSelect=newMage.clone();//кинуть на клиент
 		this.gameClients.forEach(function(obj){
-			obj.takeMage(newMage);
+			obj.takeMage(newMage.toJSON);
 		});
 	}
 
@@ -452,7 +399,7 @@ class GameServer {
 		const newW = new Wall(x,y,this.gameId);
 		this.level.elems.walls.push(newW);
 		this.gameClients.forEach(function(obj){
-			obj.takeWall(newW);
+			obj.takeWall(newW.toJSON);
 		});
 	}
 

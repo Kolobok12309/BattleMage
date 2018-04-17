@@ -9,8 +9,8 @@ function rand(min,max) {//включая оба предела
 }
 
 var GameClient1 = GameServer1.getClient();
-GameClient1.l = new HTMLLevel(GameClient1.level,HEIGHTBLOCK,WIDTHBLOCK);
-GameClient1.l.renderPole();
+GameClient1.takeLevel(GameClient1.level);
+GameClient1.level.renderPole();
 
 const vm = new Vue({
 	el: '#control',
@@ -18,8 +18,8 @@ const vm = new Vue({
 		game: GameClient1,
 		nowMainSelect: GameClient1.nowMainSelect,//выбранный в данный момент юнит
 		step: 0,
-		update: false,//костыль
 		spellId: '',
+		serverStep: GameServer1.step,
 	},
 	methods: {
 		

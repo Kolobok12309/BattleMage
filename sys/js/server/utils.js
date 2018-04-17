@@ -18,3 +18,7 @@ function cloneArray(arr) {
     }
     return newArr;
 }
+
+function log(server,msg) {
+	console.log(msg+` [${server?'SERVER':'CLIENT'}]`);
+}

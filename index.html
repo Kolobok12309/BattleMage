@@ -7,12 +7,14 @@
 	<link rel="stylesheet" href="sys/css/normalize.css">
 	<link rel="stylesheet" href="sys/css/skeleton.css">
 	<script type="text/javascript" src='sys/js/client/vue.js'></script>
+	<script type="text/javascript" src='sys/js/client/manager.js'></script>
+	<script type="text/javascript" src='sys/js/client/const.js'></script>
 	<script type="text/javascript" src='sys/js/server/utils.js'></script>
 	<script type="text/javascript" src='sys/js/server/classes.js'></script>
 	<script type="text/javascript" src='sys/js/server/buffs.js'></script>
 	<script type="text/javascript" src='sys/js/server/bottles.js'></script>
 	<script type="text/javascript" src='sys/js/server/spells.js'></script>
-	<script type="text/javascript" src='sys/js/client/const.js'></script>
+	<script type="text/javascript" src='sys/js/server/main.js'></script>
 </head>
 <body>
 	<div id='pole'></div>
@@ -24,22 +26,22 @@
 	<button onclick='genWalls(GameServer1);'>Создать границы</button>
 	<div id='control'>
 		<div id='units'>
-			<div v-for='gamer in game.l.level.elems.units.gamers' class='unit' :class='{mainTarget: game.nowMainSelect==gamer}'
+			<div v-for='gamer in game.level.elems.units.gamers' class='unit' :class='{mainTarget: game.nowMainSelect==gamer}'
 				:style='{
-				width:game.l.WIDTHBLOCK+"px",
-				height: game.l.HEIGHTBLOCK+"px",
-				left: gamer.x*game.l.WIDTHBLOCK+"px",
-				top: (game.l.level.maxY-gamer.y-1)*game.l.HEIGHTBLOCK+"px",
+				width:game.level.WIDTHBLOCK+"px",
+				height: game.level.HEIGHTBLOCK+"px",
+				left: gamer.x*game.level.WIDTHBLOCK+"px",
+				top: (game.level.maxY-gamer.y-1)*game.level.HEIGHTBLOCK+"px",
 				backgroundColor: "red"
 				}'>	
 			</div>
 
-			<div v-for='wall in game.l.level.elems.walls' class='unit' 
+			<div v-for='wall in game.level.elems.walls' class='unit' 
 				:style='{
-				width:game.l.WIDTHBLOCK+"px",
-				height: game.l.HEIGHTBLOCK+"px",
-				left: wall.x*game.l.WIDTHBLOCK+"px",
-				top: (game.l.level.maxY-wall.y-1)*game.l.HEIGHTBLOCK+"px",
+				width:game.level.WIDTHBLOCK+"px",
+				height: game.level.HEIGHTBLOCK+"px",
+				left: wall.x*game.level.WIDTHBLOCK+"px",
+				top: (game.level.maxY-wall.y-1)*game.level.HEIGHTBLOCK+"px",
 				backgroundColor: "black"
 			}'>	
 			</div>
@@ -76,15 +78,15 @@
 				<button class='button-primary' v-on:click='game.nowMainSelect.cast(spellId)'>CAST</button>
 			</div>
 			<br>
-			<button v-if='game.nowMainSelect' onclick='GameServer.nowMainSelect.remove()'>DELETE</button>
+			<button v-if='game.nowMainSelect' onclick='GameClient1.nowMainSelect.remove()'>DELETE</button>
 			<div v-if='game.nowMainSelect&&game.nowMainSelect.stats'>
 				<healthbar :width='"100px"' :height='"30px"' :hp='game.nowMainSelect.stats.hp' :hp-max='game.nowMainSelect.stats.hpMax'></healthbar>
 				<manabar :width='"100px"' :height='"30px"' :mp='game.nowMainSelect.stats.mp' :mp-max='game.nowMainSelect.stats.mpMax'></manabar>
 			</div>
+			<span>Ход на сервере: {{serverStep}}</span>
 			<span>Текущий ход: {{step}}</span>
 		</div>
 	</div>
-	<script type="text/javascript" src='sys/js/server/main.js'></script>
 	<script type="text/javascript" src='sys/js/client/main.js'></script>
 </body>
 </html>
