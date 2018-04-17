@@ -4,4 +4,8 @@ class lowDmg extends Buff {
 			target.addHp(-10);
 		});
 	}
+
+	clone() {
+		return new lowDmg();
+	}
 }

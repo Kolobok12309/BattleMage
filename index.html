@@ -6,38 +6,40 @@
 	<link rel="stylesheet" type="text/css" href="sys/css/style.css">
 	<link rel="stylesheet" href="sys/css/normalize.css">
 	<link rel="stylesheet" href="sys/css/skeleton.css">
-	<script type="text/javascript" src='sys/js/vue.js'></script>
-	<script type="text/javascript" src='sys/js/classes.js'></script>
-	<script type="text/javascript" src='sys/js/buffs.js'></script>
-	<script type="text/javascript" src='sys/js/bottles.js'></script>
-	<script type="text/javascript" src='sys/js/spells.js'></script>
+	<script type="text/javascript" src='sys/js/client/vue.js'></script>
+	<script type="text/javascript" src='sys/js/server/utils.js'></script>
+	<script type="text/javascript" src='sys/js/server/classes.js'></script>
+	<script type="text/javascript" src='sys/js/server/buffs.js'></script>
+	<script type="text/javascript" src='sys/js/server/bottles.js'></script>
+	<script type="text/javascript" src='sys/js/server/spells.js'></script>
+	<script type="text/javascript" src='sys/js/client/const.js'></script>
 </head>
 <body>
 	<div id='pole'></div>
 
 
 	<br>
-	<button class='button-primary' onclick='Game1.addMage("team","name",Game1.level.maxX-2,Game1.level.maxY-2);'>Создать блок</button>
-	<button onclick='Game1.addWall(Game1.level.maxX-2,Game1.level.maxY-2);'>Создать стену</button>
-	<button onclick='genWalls();'>Создать границы</button>
+	<button class='button-primary' onclick='GameServer1.addMage("default","default",1,1);'>Создать блок</button>
+	<button onclick='GameServer1.addWall(1,1);'>Создать стену</button>
+	<button onclick='genWalls(GameServer1);'>Создать границы</button>
 	<div id='control'>
 		<div id='units'>
-			<div v-for='gamer in game.level.elems.units.gamers' class='unit' :class='{mainTarget: game.nowMainSelect==gamer}'
+			<div v-for='gamer in game.l.level.elems.units.gamers' class='unit' :class='{mainTarget: game.nowMainSelect==gamer}'
 				:style='{
-				width:game.level.WIDTHBLOCK+"px",
-				height: game.level.HEIGHTBLOCK+"px",
-				left: gamer.x*game.level.WIDTHBLOCK+"px",
-				top: (game.level.maxY-gamer.y-1)*game.level.HEIGHTBLOCK+"px",
+				width:game.l.WIDTHBLOCK+"px",
+				height: game.l.HEIGHTBLOCK+"px",
+				left: gamer.x*game.l.WIDTHBLOCK+"px",
+				top: (game.l.level.maxY-gamer.y-1)*game.l.HEIGHTBLOCK+"px",
 				backgroundColor: "red"
 				}'>	
 			</div>
 
-			<div v-for='wall in game.level.elems.walls' class='unit' 
+			<div v-for='wall in game.l.level.elems.walls' class='unit' 
 				:style='{
-				width:game.level.WIDTHBLOCK+"px",
-				height: game.level.HEIGHTBLOCK+"px",
-				left: wall.x*game.level.WIDTHBLOCK+"px",
-				top: (game.level.maxY-wall.y-1)*game.level.HEIGHTBLOCK+"px",
+				width:game.l.WIDTHBLOCK+"px",
+				height: game.l.HEIGHTBLOCK+"px",
+				left: wall.x*game.l.WIDTHBLOCK+"px",
+				top: (game.l.level.maxY-wall.y-1)*game.l.HEIGHTBLOCK+"px",
 				backgroundColor: "black"
 			}'>	
 			</div>
@@ -46,23 +48,23 @@
 		<div id='hid'>
 			<div v-if='game.nowMainSelect&&game.nowMainSelect.move'>
 				<div class='row'>
-					<button onclick='Game1.nowMainSelect.move({x:-1,y:1})'>\</button>
-					<button onclick='Game1.nowMainSelect.move({y:1})'>/\</button>
-					<button onclick='Game1.nowMainSelect.move({x:1,y:1})'>/-</button>
+					<button onclick='GameClient1.move({x:-1,y:1})'>\</button>
+					<button onclick='GameClient1.move({y:1})'>/\</button>
+					<button onclick='GameClient1.move({x:1,y:1})'>/-</button>
 				</div>
 				<br>
 				<br>
 				<div class='row'>
-					<button onclick='Game1.nowMainSelect.move({x:-1})'><-</button>
-					<button onclick='Game1.nowMainSelect.move({})'>SKIP</button>
-					<button onclick='Game1.nowMainSelect.move({x:1})'>-></button>
+					<button onclick='GameClient1.move({x:-1})'><-</button>
+					<button onclick='GameClient1.move({})'>SKIP</button>
+					<button onclick='GameClient1.move({x:1})'>-></button>
 				</div>
 				<br>
 				<br>
 				<div class='row'>
-					<button onclick='Game1.nowMainSelect.move({x:-1,y:-1})'>/_</button>
-					<button onclick='Game1.nowMainSelect.move({y:-1})'>\/</button>
-					<button onclick='Game1.nowMainSelect.move({x:1,y:-1})'>_\</button>
+					<button onclick='GameClient1.move({x:-1,y:-1})'>/_</button>
+					<button onclick='GameClient1.move({y:-1})'>\/</button>
+					<button onclick='GameClient1.move({x:1,y:-1})'>_\</button>
 				</div>
 			</div>
 			<br>
@@ -74,7 +76,7 @@
 				<button class='button-primary' v-on:click='game.nowMainSelect.cast(spellId)'>CAST</button>
 			</div>
 			<br>
-			<button v-if='game.nowMainSelect' onclick='Game1.nowMainSelect.remove()'>DELETE</button>
+			<button v-if='game.nowMainSelect' onclick='GameServer.nowMainSelect.remove()'>DELETE</button>
 			<div v-if='game.nowMainSelect&&game.nowMainSelect.stats'>
 				<healthbar :width='"100px"' :height='"30px"' :hp='game.nowMainSelect.stats.hp' :hp-max='game.nowMainSelect.stats.hpMax'></healthbar>
 				<manabar :width='"100px"' :height='"30px"' :mp='game.nowMainSelect.stats.mp' :mp-max='game.nowMainSelect.stats.mpMax'></manabar>
@@ -82,6 +84,7 @@
 			<span>Текущий ход: {{step}}</span>
 		</div>
 	</div>
-	<script type="text/javascript" src='sys/js/main.js'></script>
+	<script type="text/javascript" src='sys/js/server/main.js'></script>
+	<script type="text/javascript" src='sys/js/client/main.js'></script>
 </body>
 </html>

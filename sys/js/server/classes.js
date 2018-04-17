@@ -3,6 +3,19 @@ class xy {
 		this.x=x;
 		this.y=y;
 	}
+
+	equal(a) {
+		return a.x===this.x&&a.y===this.y;
+	}
+
+	clone() {
+		return new xy(this.x,this.y);
+	}
+
+	add(xy) {
+		this.x+=xy.x;
+		this.y+=xy.y;
+	}
 }
 
 
@@ -57,35 +70,39 @@ class unitMaker {
 }
 
 class Mage extends unitMaker {
-	constructor(team='default',name='default',x,y,gameId) {
+	constructor(team='default',name='default',x=1,y=1,gameId,stats,buffs=[]) {
 		super(x,y,gameId);
 		this.team=team;
 		this.role='Mage';
 		this.name=name;
-		this.steps=0;
-		this.stats = {
-			hp: 100,
-			hpMax: 100,
-			hpMin: 0,
-			mp: 100,
-			mpMax: 100,
+		if(stats===undefined) {
+			this.stats = {
+				hp: 100,
+				hpMax: 100,
+				hpMin: 0,
+				mp: 100,
+				mpMax: 100,
+				maxSteps: 1,
+				live: true,
+				canCast: true,
+				steps: 0,
+			};
+		} else {
+			this.stats=stats;
 		}
-		this.maxSteps=1;
-		this.live=true;
-		this.canCast=true;
-		this.buffs=[];
+		this.buffs=buffs;
+	}
+
+	clone() {
+		return newMage(this.team,this.name,this.x,this.y,this.gameId,this.stats,cloneArray(this.buffs));
 	}
 
 	addHp(hp) {
 		if(this.live) {
-			Vue.set(this.stats,'hp',this.stats.hp+hp);
-			updateVue();
-			//this.stats.hp+=hp;
+			this.stats.hp+=hp;
 			if(this.stats.hp>this.stats.hpMax) this.stats.hp=this.stats.hpMax;
 			if(this.stats.hp<=this.stats.hpMin) {
-				Vue.set(this.stats,'hp',0);
-				updateVue();
-				//this.hp=0;
+				this.hp=0;
 				this.live=false;
 				console.log('Цель мертва');
 				this.canMove=false;
@@ -117,19 +134,13 @@ class Mage extends unitMaker {
 		if(this.live) {
 			//this.stats.mp+=mp;
 			Vue.set(this.stats,'mp',this.stats.mp+mp);
-			updateVue();
 			if(this.stats.mp>this.stats.mpMax) this.stats.mp=this.stats.mpMax;
 			if(this.stats.mp<=0) {
-				updateVue();
 				Vue.set(this.stats,'mp',0);
 			}
 		} else {
 			console.log('Цель мертва');
 		}
-	}
-
-	preCast(id) {//при выборе заклинания выбираются кол-во целей итд
-
 	}
 
 	cast(id,target) {//сам каст
@@ -159,8 +170,12 @@ class Mage extends unitMaker {
 }
 
 class Wall extends unitMaker {
-	constructor(x,y,gameId) {
+	constructor(x=1,y=1,gameId) {
 		super(x,y,gameId);
+	}
+
+	clone() {
+		return new Wall(this.x,this.y,this.gameId);
 	}
 }
 
@@ -190,7 +205,7 @@ class Spell {
 				//const inputs=getId('spellInput').value;
 				callback.call(this, me, target);
 				me.addMp(-manacost);
-				games[gameId].nowMainTarget=null;
+				if(targets!='units') games[gameId].nowMainTarget=null;
 				getId('MainTarget').remove();
 			}
 			else console.log('Недостаточно маны');
@@ -207,8 +222,9 @@ class Buff {
 		this.delaySteps=delaySteps;
 		this.nowStep=0;
 		this.callback=callback;
-		this.state=(state)?'Buff':'Debuff';
+		this.state=state;
 	}
+
 	cast(target) {
 		if(this.nowTick%(this.delaySteps+1)===this.delaySteps) {
 			this.callback(target);
@@ -258,19 +274,30 @@ class Level {
 		return result;
 	}
 
+	clone() {
+		return new Level(this.maxX,this.maxY,this.gameId,{
+			units: {
+				gamers: cloneArray(this.elems.units.gamers),
+				others: cloneArray(this.elems.units.others),
+			},
+			walls: cloneArray(this.elems.walls),
+			activeMagic: cloneArray(this.elems.activeMagic),
+			activeBottles: cloneArray(this.elems.activeBottles),
+		});
+	}
 }
 
-class HTMLLevel extends Level {
-	constructor(x,WIDTH,y,HEIGHT,gameId) {
-		super(x,y,gameId);
+class HTMLLevel {//визуализатор
+	constructor(level,WIDTH,HEIGHT) {
+		this.level=level.clone();
 		this.WIDTHBLOCK=WIDTH;
 		this.HEIGHTBLOCK=HEIGHT;
 	}
 
 	renderPole() {
 		const pole = document.createElement('div');
-		pole.style.width=this.maxX*this.WIDTHBLOCK+'px';
-		pole.style.height=this.maxY*this.HEIGHTBLOCK+'px';
+		pole.style.width=this.level.maxX*this.WIDTHBLOCK+'px';
+		pole.style.height=this.level.maxY*this.HEIGHTBLOCK+'px';
 		pole.style.backgroundColor='lightgray';
 		getId('pole').appendChild(pole);
 
@@ -292,10 +319,11 @@ class HTMLLevel extends Level {
 
 		var self = this;
 		pole.addEventListener('mousemove',function(e){
-			if(e.clientX+self.WIDTHBLOCK/2<self.maxX*self.WIDTHBLOCK&&e.clientY+self.HEIGHTBLOCK/2<self.maxY*self.HEIGHTBLOCK&&e.clientX-self.WIDTHBLOCK/2>0&&e.clientY-self.HEIGHTBLOCK/2>0) {
+			//console.log(e);
+			if(e.clientX+self.WIDTHBLOCK/2<self.level.maxX*self.WIDTHBLOCK&&e.clientY+self.HEIGHTBLOCK/2<self.level.maxY*self.HEIGHTBLOCK&&e.clientX-self.WIDTHBLOCK/2>0&&e.clientY-self.HEIGHTBLOCK/2>0) {
 				var x = Math.ceil(e.clientX/self.WIDTHBLOCK)-1;
 				var y = Math.ceil(e.clientY/self.HEIGHTBLOCK)-1;
-				cursor.Coords={x:x,y:self.maxY-y-1};
+				cursor.Coords={x:x,y:self.level.maxY-y-1};
 				cursor.style.left=`${x*self.WIDTHBLOCK}px`;
 				cursor.style.top=`${y*self.HEIGHTBLOCK}px`;
 			}
@@ -304,7 +332,7 @@ class HTMLLevel extends Level {
 		cursor.addEventListener('click',function(){
 			//console.log(cursor.Coords.x+':'+cursor.Coords.y);
 			var target;
-			if(games[self.gameId].nowMainTarget||getId('MainTarget')) {
+			if(GameClient1.nowMainTarget||getId('MainTarget')) {
 				target = getId('MainTarget');
 			} else {
 				target = document.createElement('div');
@@ -316,24 +344,58 @@ class HTMLLevel extends Level {
 			}
 			target.style.left=this.style.left;
 			target.style.top=this.style.top;
-			games[self.gameId].nowMainTarget=this.Coords;
+			GameClient1.nowMainTarget=this.Coords;
 		});
 
 		cursor.addEventListener('dblclick',function(){
-			const target = games[self.gameId].level.getElemByCoords(cursor.Coords);
+			const target = GameClient1.l.level.getElemByCoords(cursor.Coords);
 			if(target) {
-				games[self.gameId].nowMainSelect=target;
+				GameClient1.nowMainSelect=target;
 			}
 		});
 	}
 }
 
-class Game {
-	constructor(x,WIDTH,y,HEIGHT) {
+class GameClient {
+	constructor(gameId,level,magic,id) {
+		this.gameId=gameId;
+		this.id=id;
+		this.nowMainSelect=null;
+		this.level= level.clone();
+		this.magic= {
+			spells: cloneArray(magic.spells),
+			buffs: cloneArray(magic.buffs),
+			bottles: cloneArray(magic.bottles),
+		}
+	}
+
+	takeMage(mage) {
+		this.l.level.elems.units.gamers.push(mage);
+		this.nowMainSelect=mage;
+	}
+
+	takeWall(wall) {
+		this.l.level.elems.walls.push(wall);
+		console.log('Добавлена стена');
+	}
+
+	move(xy) {
+		//this.nowMainSelect.move(xy);
+		GameServer1.doAction(JSON.stringify({
+			action: 'move',
+			id: 0,
+			args: xy,
+		}));
+	}
+}
+
+class GameServer {
+	constructor(x,y) {
 		this.gameId=games.length;
-		this.level=new HTMLLevel(x,WIDTH,y,HEIGHT,this.gameId);
+		this.level=new Level(x,y,this.gameId);
 		this.nowMainSelect=null;
 		this.nowMainTarget=null;
+		this.gameClients=[];
 		this.magic = {
 			spells: [],//всевозможные заклинания
 			buffs: [],//баффы
@@ -344,10 +406,32 @@ class Game {
 		games.push(this);
 	}
 
-	checkStep() {
-		if(this.nowMainSelect.steps>=this.nowMainSelect.maxSteps) {
-			this.nextPlayer();
+	getClient() {
+		const id = 0;//id юзера
+		const newCl = new GameClient(this.gameId,this.level,this.magic,id);
+		this.gameClients.push(newCl);
+		return newCl;
+	}
+
+	doAction(action) {
+		var req = JSON.parse(action);
+		// req = {
+		// 	action: 'move',
+		// 	id: 0,
+		// 	args: {x:1,y:1},
+		// }
+		switch(req.action) {
+			case 'move': //Сюда вписать функцию проверки может ли быть данный ход
+			this.level.elems.units.gamers[req.id].move(req.args);
+			break;
 		}
+		console.log(action);
+	}
+
+	checkStep() {
+		// if(this.nowMainSelect.steps>=this.nowMainSelect.maxSteps) {
+		// 	this.nextPlayer();
+		// }
 	}
 
 	addSpell(name,targets,manacost,callback) {
@@ -358,11 +442,18 @@ class Game {
 	addMage(team,name,x,y) {
 		const newMage = new Mage(team,name,x,y,this.gameId);
 		this.level.elems.units.gamers.push(newMage);
-		this.nowMainSelect=newMage;
+		GameClient1.nowMainSelect=newMage;//кинуть на клиент
+		this.gameClients.forEach(function(obj){
+			obj.takeMage(newMage);
+		});
 	}
 
 	addWall(x,y) {
-		this.level.elems.walls.push(new Wall(x,y,this.gameId));
+		const newW = new Wall(x,y,this.gameId);
+		this.level.elems.walls.push(newW);
+		this.gameClients.forEach(function(obj){
+			obj.takeWall(newW);
+		});
 	}
 
 
